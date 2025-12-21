@@ -2,6 +2,7 @@
 
 import { get, post } from '@/lib/request'
 import type { ArenaResponse, VoteRequest, VoteResponse, StatsResponse } from '@/types/arena'
+import type { DateRange } from '@/components/arena'
 
 // 模拟模式开关 - 设为 true 使用模拟数据，false 调用真实 API
 const USE_MOCK = false
@@ -118,15 +119,23 @@ const solution = {
 /**
  * 提交问题，获取 4 个匿名回答
  * @param question 用户问题
+ * @param dateRange 可选的时间范围
  * @returns 竞技场回答响应
  */
-export async function submitQuestion(question: string): Promise<ArenaResponse> {
+export async function submitQuestion(question: string, dateRange?: DateRange): Promise<ArenaResponse> {
   if (USE_MOCK) {
     // 模拟网络延迟
     await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY))
     return generateMockAnswers(question)
   }
-  return post<ArenaResponse>('/arena/ask', { question })
+
+  const payload: Record<string, unknown> = { question }
+  if (dateRange && dateRange[0] && dateRange[1]) {
+    payload.startDate = dateRange[0].toISOString()
+    payload.endDate = dateRange[1].toISOString()
+  }
+
+  return post<ArenaResponse>('/arena/ask', payload)
 }
 
 /**

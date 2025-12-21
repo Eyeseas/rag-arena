@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Typography, message, Alert } from 'antd'
-import { TrophyOutlined } from '@ant-design/icons'
+import { TrophyOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import {
   QuestionInput,
   AnswerGrid,
   AnswerGridSkeleton,
   LayoutSwitcher,
   type LayoutMode,
+  type DateRange,
 } from '@/components/arena'
 import { useArenaStore } from '@/stores/arena'
 import { arenaApi } from '@/services/arena'
@@ -39,12 +40,12 @@ function ArenaPage() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('two-col')
 
   // 提交问题
-  const handleSubmit = async (q: string) => {
+  const handleSubmit = async (q: string, dateRange?: DateRange) => {
     setQuestion(q)
     setLoading(true)
 
     try {
-      const response = await arenaApi.submitQuestion(q)
+      const response = await arenaApi.submitQuestion(q, dateRange)
       setQuestionId(response.questionId)
       setAnswers(response.answers)
     } catch (error) {
@@ -84,66 +85,86 @@ function ArenaPage() {
   }
 
   const hasAnswers = answers.length > 0
+  const isActive = hasAnswers || isLoading
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* 页面标题 */}
-      <div className="text-center mb-8">
-        <Title level={2} className="flex items-center justify-center gap-3 !mb-2">
-          <TrophyOutlined className="text-yellow-500" />
-          RAG 问答竞技场
-        </Title>
-        <Text type="secondary">
-          提出问题，对比 4 个 AI 模型的回答，为最佳答案点赞
-        </Text>
-      </div>
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      {/* 标题和输入区域 */}
+      <div
+        className={`w-full max-w-4xl mx-auto ${
+          isActive ? 'pt-0' : 'flex-1 flex flex-col justify-center'
+        }`}
+      >
+        {/* 页面标题 */}
+        <div className="text-center mb-8">
+          <Title
+            level={isActive ? 3 : 1}
+            className="flex items-center justify-center gap-3 !mb-3"
+          >
+            <TrophyOutlined className="text-yellow-500" />
+            RAG 问答竞技场
+          </Title>
 
-      {/* 问题输入区域 */}
-      <div className="mb-8">
-        <QuestionInput
-          loading={isLoading}
-          disabled={hasAnswers}
-          onSubmit={handleSubmit}
-          onReset={handleReset}
-        />
-      </div>
-
-      {/* 当前问题展示 + 布局切换 */}
-      {question && hasAnswers && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <Alert
-            message="当前问题"
-            description={question}
-            type="info"
-            showIcon
-            className="flex-1 w-full sm:w-auto"
-          />
-          <div className="flex-shrink-0">
-            <LayoutSwitcher value={layoutMode} onChange={setLayoutMode} />
-          </div>
+          {!isActive && (
+            <Text type="secondary" className="text-base">
+              <ThunderboltOutlined className="mr-2 text-amber-500" />
+              提出问题，对比 4 个 AI 模型的回答，为最佳答案点赞
+            </Text>
+          )}
         </div>
-      )}
 
-      {/* 加载状态 */}
-      <AnswerGridSkeleton visible={isLoading} />
+        {/* 问题输入区域 */}
+        <div className="mb-8">
+          <QuestionInput
+            loading={isLoading}
+            disabled={hasAnswers}
+            onSubmit={handleSubmit}
+            onReset={handleReset}
+          />
+        </div>
+      </div>
 
-      {/* 回答网格 */}
-      {!isLoading && (
-        <AnswerGrid
-          answers={answers}
-          votedAnswerId={votedAnswerId}
-          votingAnswerId={votingAnswerId}
-          onVote={handleVote}
-          layoutMode={layoutMode}
-        />
-      )}
+      {/* 回答区域 */}
+      {isActive && (
+        <div className="flex-1 w-full max-w-7xl mx-auto">
+          {/* 当前问题展示 + 布局切换 */}
+          {question && hasAnswers && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <Alert
+                message="当前问题"
+                description={question}
+                type="info"
+                showIcon
+                className="flex-1 w-full sm:w-auto"
+              />
+              <div className="flex-shrink-0">
+                <LayoutSwitcher value={layoutMode} onChange={setLayoutMode} />
+              </div>
+            </div>
+          )}
 
-      {/* 投票提示 */}
-      {hasAnswers && !votedAnswerId && !isLoading && (
-        <div className="text-center mt-6">
-          <Text type="secondary">
-            请为您认为最好的回答点赞 👆
-          </Text>
+          {/* 加载状态 */}
+          <AnswerGridSkeleton visible={isLoading} />
+
+          {/* 回答网格 */}
+          {!isLoading && (
+            <AnswerGrid
+              answers={answers}
+              votedAnswerId={votedAnswerId}
+              votingAnswerId={votingAnswerId}
+              onVote={handleVote}
+              layoutMode={layoutMode}
+            />
+          )}
+
+          {/* 投票提示 */}
+          {hasAnswers && !votedAnswerId && !isLoading && (
+            <div className="text-center mt-6">
+              <Text type="secondary">
+                请为您认为最好的回答点赞 👆
+              </Text>
+            </div>
+          )}
         </div>
       )}
     </div>
