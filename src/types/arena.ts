@@ -41,3 +41,9 @@ export interface VoteResponse {
   /** 是否成功 */
   success: boolean
 }
+
+/**
+ * 统计数据响应
+ * key: 提供商 ID, value: 投票数量
+ */
+export type StatsResponse = Record<string, number>

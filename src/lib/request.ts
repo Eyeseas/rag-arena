@@ -2,7 +2,8 @@ import axios, { type AxiosRequestConfig } from 'axios'
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 10000,
+  // AI 回答可能需要较长时间，设置 60 秒超时
+  timeout: 60000,
 })
 
 request.interceptors.request.use((config) => {

@@ -2,8 +2,8 @@
 
 import { Card, Button, Tag } from 'antd'
 import { LikeOutlined, LikeFilled } from '@ant-design/icons'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { XMarkdown } from '@ant-design/x-markdown'
+import '@ant-design/x-markdown/themes/light.css'
 import type { Answer } from '@/types/arena'
 
 interface AnswerCardProps {
@@ -61,10 +61,8 @@ export function AnswerCard({
         </Button>
       }
     >
-      <div className="flex-1 overflow-auto max-h-80 prose prose-sm max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {answer.content}
-        </ReactMarkdown>
+      <div className="flex-1 overflow-auto max-h-80">
+        <XMarkdown className="x-markdown-light" content={answer.content} />
       </div>
     </Card>
   )

@@ -1,10 +1,10 @@
 // Arena API - RAG 问答竞技场接口服务
 
-import { post } from '@/lib/request'
-import type { ArenaResponse, VoteRequest, VoteResponse } from '@/types/arena'
+import { get, post } from '@/lib/request'
+import type { ArenaResponse, VoteRequest, VoteResponse, StatsResponse } from '@/types/arena'
 
 // 模拟模式开关 - 设为 true 使用模拟数据，false 调用真实 API
-const USE_MOCK = true
+const USE_MOCK = false
 
 // 模拟延迟 (ms)
 const MOCK_DELAY = 1500
@@ -144,7 +144,26 @@ export async function submitVote(request: VoteRequest): Promise<VoteResponse> {
   return post<VoteResponse>('/arena/vote', request)
 }
 
+/**
+ * 获取投票统计数据
+ * @returns 统计数据响应
+ */
+export async function getStats(): Promise<StatsResponse> {
+  if (USE_MOCK) {
+    // 模拟网络延迟
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    return {
+      openai: 15,
+      deepseek: 12,
+      claude: 8,
+      gemini: 5,
+    }
+  }
+  return get<StatsResponse>('/arena/stats')
+}
+
 export const arenaApi = {
   submitQuestion,
   submitVote,
+  getStats,
 }
