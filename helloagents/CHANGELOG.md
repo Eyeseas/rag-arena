@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-25
+
+### 新增
+- Arena：增加 Prompt 库与引用来源面板（`@ant-design/x Prompts` / `Sources`）
+
 ## [0.1.0] - 2025-12-24
 
 ### 新增

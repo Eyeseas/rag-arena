@@ -2,17 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Typography, message, Alert, Drawer, Button } from 'antd'
-import { TrophyOutlined, ThunderboltOutlined, HistoryOutlined } from '@ant-design/icons'
+import { Typography, message, Alert, Drawer, Button, Modal, Tabs, Empty, Badge } from 'antd'
+import {
+  TrophyOutlined,
+  ThunderboltOutlined,
+  HistoryOutlined,
+  FileTextOutlined,
+} from '@ant-design/icons'
 import {
   QuestionInput,
   AnswerGrid,
   AnswerGridSkeleton,
   LayoutSwitcher,
   SessionSidebar,
+  PromptLibrary,
+  CitationSourcesPanel,
   type LayoutMode,
   type DateRange,
 } from '@/components/arena'
+import { buildSourcesItemsFromAnswers } from '@/lib/citationSources'
 import { useArenaStore } from '@/stores/arena'
 import { arenaApi } from '@/services/arena'
 
@@ -39,6 +47,9 @@ function ArenaPage() {
   const [votingAnswerId, setVotingAnswerId] = useState<string | null>(null)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('two-col')
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [sourcesOpen, setSourcesOpen] = useState(false)
+  const [sourcesTab, setSourcesTab] = useState<string>('all')
+  const [draftQuestion, setDraftQuestion] = useState('')
 
   const { activeSessionId, activeSession } = useArenaStore((s) => ({
     activeSessionId: s.activeSessionId,
@@ -52,10 +63,28 @@ function ArenaPage() {
 
   useEffect(() => {
     setVotingAnswerId(null)
+    setDraftQuestion('')
   }, [activeSessionId])
+
+  const citationsCount = answers.reduce((sum, a) => sum + (a.citations?.length || 0), 0)
+
+  const handlePickPrompt = (text: string) => {
+    if (draftQuestion.trim().length > 0) {
+      Modal.confirm({
+        title: '覆盖当前输入？',
+        content: '当前输入框已有内容，选择 Prompt 将覆盖当前内容。是否继续？',
+        okText: '覆盖',
+        cancelText: '取消',
+        onOk: () => setDraftQuestion(text),
+      })
+      return
+    }
+    setDraftQuestion(text)
+  }
 
   // 提交问题
   const handleSubmit = async (q: string, dateRange?: DateRange) => {
+    setDraftQuestion(q)
     startSessionWithQuestion(q)
     setLoading(true)
 
@@ -157,8 +186,13 @@ function ArenaPage() {
     <div className="mx-auto w-full max-w-7xl flex gap-6 min-h-[calc(100vh-4rem)]">
       {/* 桌面端侧边栏 */}
       <aside className="hidden lg:block w-72 flex-shrink-0">
-        <div className="sticky top-8 h-[calc(100vh-6rem)]">
-          <SessionSidebar className="h-full" disabled={isLoading} />
+        <div className="sticky top-8 h-[calc(100vh-6rem)] flex flex-col gap-4">
+          <SessionSidebar className="flex-[3] min-h-0" disabled={isLoading} />
+          <PromptLibrary
+            className="flex-[2] min-h-0"
+            disabled={isLoading}
+            onPick={handlePickPrompt}
+          />
         </div>
       </aside>
 
@@ -175,7 +209,7 @@ function ArenaPage() {
                 onClick={() => setHistoryOpen(true)}
                 disabled={isLoading}
               >
-                历史
+                侧栏
               </Button>
 
               <Title
@@ -200,6 +234,8 @@ function ArenaPage() {
                 key={activeSessionId}
                 loading={isLoading}
                 disabled={hasAnswers}
+                value={draftQuestion}
+                onChange={setDraftQuestion}
                 onSubmit={handleSubmit}
                 onReset={handleReset}
               />
@@ -220,7 +256,20 @@ function ArenaPage() {
                   showIcon
                   className="flex-1 w-full sm:w-auto"
                 />
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  {citationsCount > 0 && (
+                    <Badge count={citationsCount} size="small">
+                      <Button
+                        icon={<FileTextOutlined />}
+                        onClick={() => {
+                          setSourcesTab('all')
+                          setSourcesOpen(true)
+                        }}
+                      >
+                        引用面板
+                      </Button>
+                    </Badge>
+                  )}
                   <LayoutSwitcher value={layoutMode} onChange={setLayoutMode} />
                 </div>
               </div>
@@ -253,14 +302,67 @@ function ArenaPage() {
 
       {/* 移动端抽屉侧边栏 */}
       <Drawer
-        title="历史会话"
+        title="侧边栏"
         placement="left"
         width={320}
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
         className="lg:hidden"
       >
-        <SessionSidebar disabled={isLoading} onAfterSelect={() => setHistoryOpen(false)} />
+        <div className="flex flex-col gap-4 h-full">
+          <SessionSidebar disabled={isLoading} onAfterSelect={() => setHistoryOpen(false)} />
+          <PromptLibrary
+            disabled={isLoading}
+            onPick={handlePickPrompt}
+            onAfterPick={() => setHistoryOpen(false)}
+          />
+        </div>
+      </Drawer>
+
+      {/* 引用来源面板 */}
+      <Drawer
+        title="引用来源面板"
+        placement="right"
+        width={480}
+        open={sourcesOpen}
+        onClose={() => setSourcesOpen(false)}
+      >
+        {citationsCount === 0 ? (
+          <Empty description="暂无引用来源" />
+        ) : (
+          <Tabs
+            activeKey={sourcesTab}
+            onChange={setSourcesTab}
+            items={[
+              {
+                key: 'all',
+                label: '全部',
+                children: (
+                  <CitationSourcesPanel
+                    items={buildSourcesItemsFromAnswers(answers)}
+                    onClickItem={(item) => {
+                      if (!item.url) return
+                      window.open(item.url, '_blank', 'noopener,noreferrer')
+                    }}
+                  />
+                ),
+              },
+              ...Array.from(new Set(answers.map((a) => a.providerId))).map((providerId) => ({
+                key: providerId,
+                label: `模型 ${providerId}`,
+                children: (
+                  <CitationSourcesPanel
+                    items={buildSourcesItemsFromAnswers(answers, providerId)}
+                    onClickItem={(item) => {
+                      if (!item.url) return
+                      window.open(item.url, '_blank', 'noopener,noreferrer')
+                    }}
+                  />
+                ),
+              })),
+            ]}
+          />
+        )}
       </Drawer>
     </div>
   )

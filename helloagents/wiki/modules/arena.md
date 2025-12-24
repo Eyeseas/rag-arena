@@ -43,6 +43,24 @@
 - 会话从列表移除
 - 删除当前会话时自动切换到其他会话或创建新会话
 
+### 需求: Prompt 库
+**模块:** arena
+用户可从内置 Prompt 库一键填入输入框，提高提问效率。
+
+#### 场景: 选择 Prompt 填入
+用户点击 Prompt 项后自动填入输入框。
+- 输入框为空时直接填入
+- 输入框非空时弹确认后覆盖
+
+### 需求: 引用来源面板
+**模块:** arena
+用户可打开引用来源面板，集中查看引用来源并跳转链接进行核验。
+
+#### 场景: 全部/按模型查看
+面板支持“全部/按模型”切换查看引用。
+- 列表内容随 Tab 切换更新
+- 点击可跳转到来源链接（如存在）
+
 ### 需求: 投票与统计
 **模块:** arena
 用户可对答案进行投票反馈，并查看统计信息。
@@ -65,3 +83,4 @@
 
 ## 变更历史
 - [202512242354_arena_sidebar_sessions](../../history/2025-12/202512242354_arena_sidebar_sessions/) - 增加侧边栏历史会话列表（`@ant-design/x Conversations`）
+- [202512250023_dashboard_template_prompts_sources](../../history/2025-12/202512250023_dashboard_template_prompts_sources/) - 增加 Prompt 库与引用来源面板（`@ant-design/x Prompts` / `Sources`）

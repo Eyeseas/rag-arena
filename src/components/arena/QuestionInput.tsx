@@ -16,6 +16,10 @@ interface QuestionInputProps {
   loading?: boolean
   /** 是否禁用 (已有回答时) */
   disabled?: boolean
+  /** 受控输入值（用于 Prompt 库填入等） */
+  value?: string
+  /** 受控输入变更回调 */
+  onChange?: (value: string) => void
   /** 提交问题回调 */
   onSubmit: (question: string, dateRange?: DateRange) => void
   /** 重新提问回调 */
@@ -33,11 +37,16 @@ const getPresets = () => [
 export function QuestionInput({
   loading = false,
   disabled = false,
+  value,
+  onChange,
   onSubmit,
   onReset,
 }: QuestionInputProps) {
-  const [value, setValue] = useState('')
+  const [innerValue, setInnerValue] = useState('')
   const [dateRange, setDateRange] = useState<DateRange>(null)
+
+  const mergedValue = value ?? innerValue
+  const setMergedValue = onChange ?? setInnerValue
 
   const handleSubmit = (content: string) => {
     const trimmed = content.trim()
@@ -46,7 +55,7 @@ export function QuestionInput({
   }
 
   const handleReset = () => {
-    setValue('')
+    setMergedValue('')
     setDateRange(null)
     onReset?.()
   }
@@ -92,10 +101,10 @@ export function QuestionInput({
   return (
     <div className="w-full max-w-3xl mx-auto">
       <Sender
-        value={value}
-        onChange={setValue}
+        value={mergedValue}
+        onChange={setMergedValue}
         onSubmit={handleSubmit}
-        onCancel={() => setValue('')}
+        onCancel={() => setMergedValue('')}
         loading={loading}
         placeholder="输入您的问题，按 Enter 发送..."
         autoSize={{ minRows: 2, maxRows: 6 }}

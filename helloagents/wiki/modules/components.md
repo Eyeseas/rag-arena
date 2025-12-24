@@ -28,6 +28,24 @@
 - 会话标题清晰可读
 - 流式生成中禁用会话切换，避免跨会话串写
 
+### 需求: Prompt 库组件
+**模块:** components
+提供 Prompt 库面板，用户可点击 Prompt 触发填入输入框。
+
+#### 场景: 点击 Prompt
+点击 Prompt 项触发回调，由页面决定填入策略（直接填入/覆盖确认）。
+- Prompt 列表分组清晰
+- 支持禁用态（例如加载中）
+
+### 需求: 引用来源面板组件
+**模块:** components
+提供引用来源聚合展示组件，支持条目点击跳转。
+
+#### 场景: 聚合来源列表
+从回答中的 citations 聚合生成来源列表，供面板复用。
+- “全部/按模型”过滤正确
+- 无链接条目不触发跳转
+
 ## 依赖
 - stores
 - services
@@ -35,3 +53,4 @@
 
 ## 变更历史
 - [202512242354_arena_sidebar_sessions](../../history/2025-12/202512242354_arena_sidebar_sessions/) - 新增 `SessionSidebar`（历史会话侧边栏）
+- [202512250023_dashboard_template_prompts_sources](../../history/2025-12/202512250023_dashboard_template_prompts_sources/) - 新增 `PromptLibrary` 与 `CitationSourcesPanel`

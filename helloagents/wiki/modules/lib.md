@@ -19,6 +19,22 @@
 - 不因 token 缺失导致前端崩溃
 - UI 可收到可处理的错误结果
 
+### 需求: Arena 辅助工具沉淀
+**模块:** lib
+为 Arena 示例提供可复用的纯前端工具：Prompt 模板与引用来源聚合。
+
+#### 场景: Prompt 模板复用
+Prompt 库以纯前端常量方式提供，供 UI 面板渲染与填入输入框。
+- 模板可分组管理
+- 不依赖后端
+
+#### 场景: 引用来源聚合
+将回答中的 citations 聚合为可展示的来源列表，供引用面板复用。
+- 支持按 providerId 过滤
+- 支持来源链接跳转（如存在）
+
 ## 依赖
 - types
 
+## 变更历史
+- [202512250023_dashboard_template_prompts_sources](../../history/2025-12/202512250023_dashboard_template_prompts_sources/) - 新增 `prompts` 与 `citationSources` 工具
