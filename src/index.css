@@ -6,6 +6,7 @@
 @tailwind utilities;
 
 html {
+  font-size: 20px; /* 全局基础字体大小 */
   overflow-y: scroll;
   scrollbar-gutter: stable;
 }
