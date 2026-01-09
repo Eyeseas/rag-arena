@@ -15,7 +15,7 @@ import {
   AnswerGrid,
   AnswerGridSkeleton,
   LayoutSwitcher,
-  SessionSidebar,
+  TaskSidebar,
   CitationSourcesPanel,
   type LayoutMode,
   type DateRange,
@@ -177,7 +177,7 @@ function ArenaPage() {
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
-        <SessionSidebar
+        <TaskSidebar
           className="h-full w-full"
           disabled={isLoading}
           collapsed={sidebarCollapsed}
@@ -340,7 +340,7 @@ function ArenaPage() {
         title={
           <span className="flex items-center gap-2">
             <HistoryOutlined className="text-teal-500" />
-            历史会话
+            任务列表
           </span>
         }
         placement="left"
@@ -352,7 +352,7 @@ function ArenaPage() {
         onClose={() => setHistoryOpen(false)}
         className="lg:hidden"
       >
-        <SessionSidebar
+        <TaskSidebar
           className="h-full"
           disabled={isLoading}
           onAfterSelect={() => setHistoryOpen(false)}
