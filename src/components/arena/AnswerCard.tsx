@@ -164,7 +164,7 @@ export function AnswerCard({
   return (
     <Card
       className={`
-        flex flex-col transition-all duration-300 !rounded-2xl overflow-hidden
+        flex flex-col transition-all duration-300 !rounded-md overflow-hidden
         ${isVoted ? 'ring-2 ring-teal-500 shadow-xl shadow-teal-500/20 animate-vote-glow' : 'hover:shadow-lg'}
         ${!hasContent && !hasError ? 'animate-pulse-soft' : ''}
         ${isBlurred ? 'blur-[2px] opacity-60 scale-[0.98]' : ''}
@@ -187,7 +187,7 @@ export function AnswerCard({
           {/* 模型标识 */}
           <div
             className={`
-              w-10 h-10 rounded-xl bg-gradient-to-br ${config.gradient}
+              w-10 h-10 rounded bg-gradient-to-br ${config.gradient}
               flex items-center justify-center shadow-md
               text-white font-bold text-lg
             `}
@@ -197,7 +197,7 @@ export function AnswerCard({
           <div className="flex flex-col">
             <span className="text-slate-700 font-semibold">模型 {answer.providerId}</span>
             {hasCitations && (
-              <span className="text-xs text-slate-400 flex items-center gap-1">
+              <span className="text-xs text-slate-500 flex items-center gap-1">
                 <FileTextOutlined className="text-[10px]" />
                 {answer.citations!.length} 个引用
               </span>
@@ -234,7 +234,7 @@ export function AnswerCard({
               type="text"
               icon={<ExpandOutlined />}
               onClick={handleOpenFullscreen}
-              className="!w-9 !h-9 !rounded-xl hover:!bg-slate-100 !text-slate-500 hover:!text-teal-500"
+              className="!w-9 !h-9 !rounded hover:!bg-slate-100 !text-slate-500 hover:!text-teal-500"
             />
           </Tooltip>
         </div>
@@ -248,11 +248,11 @@ export function AnswerCard({
             showIcon
             message="生成失败"
             description={answer.error}
-            className="mb-3 !rounded-xl"
+            className="mb-3 !rounded"
           />
         )}
         {!hasContent && !hasError && (
-          <div className="flex items-center gap-2 text-slate-400 text-sm">
+          <div className="flex items-center gap-2 text-slate-600 text-sm">
             <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
             正在生成回答...
           </div>
@@ -264,66 +264,33 @@ export function AnswerCard({
 
       {/* 引用摘要区域 */}
       {hasCitations && (
-        <div className="mt-4 pt-4 border-t border-slate-100">
-          {/* 展开/收起按钮 */}
+        <div className="mt-4 pt-3 border-t border-slate-200">
+          {/* 标题 */}
           <button
             onClick={() => setCitationsExpanded(!citationsExpanded)}
-            className={`
-              flex items-center gap-3 w-full px-4 py-3 rounded-xl
-              bg-gradient-to-r ${config.bgGradient}
-              hover:shadow-md
-              border border-slate-100 hover:border-slate-200
-              transition-all duration-300 group
-            `}
+            className="flex items-center gap-2 w-full mb-2 text-left cursor-pointer hover:text-slate-900 transition-colors"
           >
-            {/* 图标容器 */}
-            <div
-              className={`
-                w-9 h-9 rounded-xl bg-gradient-to-br ${config.gradient}
-                flex items-center justify-center shadow-sm
-                group-hover:shadow-md group-hover:scale-105 transition-all duration-300
-              `}
-            >
-              <FileTextOutlined className="text-white text-sm" />
-            </div>
-
-            {/* 文字 */}
-            <div className="flex-1 text-left">
-              <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
-                参考来源
-              </span>
-              <span className="ml-2 px-2.5 py-0.5 rounded-full bg-white/80 text-slate-600 text-xs font-bold shadow-sm">
-                {answer.citations!.length}
-              </span>
-            </div>
-
-            {/* 展开/收起图标 */}
-            <div
-              className={`
-                w-7 h-7 rounded-full bg-white shadow-sm
-                flex items-center justify-center
-                text-slate-400 group-hover:text-slate-600
-                transition-all duration-300
-                ${citationsExpanded ? 'rotate-180' : 'rotate-0'}
-              `}
-            >
-              <DownOutlined className="text-xs" />
-            </div>
+            <span className="text-sm font-medium text-slate-700">
+              参考来源
+            </span>
+            <span className="text-xs text-slate-500">
+              ({answer.citations!.length})
+            </span>
+            <DownOutlined
+              className={`text-xs text-slate-400 transition-transform duration-200 ${
+                citationsExpanded ? 'rotate-180' : ''
+              }`}
+            />
           </button>
 
-          {/* 引用列表 - 带动画 */}
-          <div
-            className={`
-              overflow-hidden transition-all duration-300 ease-out
-              ${citationsExpanded ? 'opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}
-            `}
-          >
-            <div className="space-y-3 pr-1">
+          {/* 引用列表 */}
+          {citationsExpanded && (
+            <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
               {answer.citations!.map((citation, index) => (
                 <CitationCard key={citation.id} citation={citation} index={index} />
               ))}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -355,7 +322,7 @@ export function AnswerCard({
             </div>
             <div className="flex flex-col">
               <span className="text-slate-700 font-semibold">模型 {answer.providerId}</span>
-              <span className="text-xs text-slate-400">全屏查看 · 支持追问</span>
+              <span className="text-xs text-slate-500">全屏查看 · 支持追问</span>
             </div>
           </div>
         }
@@ -366,11 +333,11 @@ export function AnswerCard({
           {/* 原始回答 + 对话历史区域 */}
           <div ref={chatContentRef} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* 原始回答 */}
-            <div className="p-5 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100">
+            <div className="p-5 bg-gradient-to-br from-slate-50 to-white rounded-md border border-slate-200">
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className={`
-                    w-8 h-8 rounded-lg bg-gradient-to-br ${config.gradient}
+                    w-8 h-8 rounded bg-gradient-to-br ${config.gradient}
                     flex items-center justify-center shadow-sm
                     text-white text-sm
                   `}
@@ -385,7 +352,7 @@ export function AnswerCard({
                   showIcon
                   message="生成失败"
                   description={answer.error}
-                  className="mb-3 !rounded-xl"
+                  className="mb-3 !rounded"
                 />
               )}
               {hasContent && (
@@ -395,12 +362,12 @@ export function AnswerCard({
 
             {/* 引用来源 */}
             {hasCitations && (
-              <div className="p-4 bg-gradient-to-br from-teal-50/50 to-emerald-50/50 rounded-2xl border border-teal-100/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileTextOutlined className="text-teal-500" />
-                  <span className="text-sm font-medium text-slate-600">参考来源 ({answer.citations!.length})</span>
+              <div className="pt-3 border-t border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium text-slate-700">参考来源</span>
+                  <span className="text-xs text-slate-500">({answer.citations!.length})</span>
                 </div>
-                <div className="space-y-2">
+                <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
                   {answer.citations!.map((citation, index) => (
                     <CitationCard key={citation.id} citation={citation} index={index} />
                   ))}
@@ -412,16 +379,16 @@ export function AnswerCard({
             {chatMessages.map((msg) => (
               <div
                 key={msg.id}
-                className={`p-5 rounded-2xl ${
+                className={`p-5 rounded-md ${
                   msg.role === 'user'
                     ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 ml-12'
-                    : 'bg-gradient-to-br from-slate-50 to-white border border-slate-100 mr-12'
+                    : 'bg-gradient-to-br from-slate-50 to-white border border-slate-200 mr-12'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div
                     className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center shadow-sm text-white text-sm
+                      w-8 h-8 rounded flex items-center justify-center shadow-sm text-white text-sm
                       ${msg.role === 'user' ? 'bg-gradient-to-br from-blue-500 to-indigo-500' : `bg-gradient-to-br ${config.gradient}`}
                     `}
                   >
@@ -437,20 +404,20 @@ export function AnswerCard({
 
             {/* 加载状态 */}
             {chatLoading && (
-              <div className="flex items-center gap-3 p-5 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 mr-12">
+              <div className="flex items-center gap-3 p-5 bg-gradient-to-br from-slate-50 to-white rounded-md border border-slate-100 mr-12">
                 <Spin size="small" />
-                <span className="text-slate-500 text-sm">模型 {answer.providerId} 正在思考...</span>
+                <span className="text-slate-600 text-sm">模型 {answer.providerId} 正在思考...</span>
               </div>
             )}
           </div>
 
           {/* 底部对话输入区域 */}
-          <div className="flex-shrink-0 p-4 border-t border-slate-100 bg-gradient-to-br from-slate-50 to-white">
+          <div className="flex-shrink-0 p-4 border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
             {hasAskedFollowUp && !chatLoading ? (
               // 已追问后显示提示
               <div className="text-center py-3">
-                <p className="text-slate-500 text-sm">
-                  ✅ 您已完成一次追问，每个模型仅支持追问一次
+                <p className="text-slate-600 text-sm">
+                  您已完成一次追问，每个模型仅支持追问一次
                 </p>
               </div>
             ) : (
@@ -463,7 +430,7 @@ export function AnswerCard({
                     onKeyDown={handleKeyDown}
                     placeholder={`继续向模型 ${answer.providerId} 提问...`}
                     autoSize={{ minRows: 1, maxRows: 4 }}
-                    className="!rounded-xl !border-slate-200 focus:!border-teal-400 !py-3 !px-4 !text-sm"
+                    className="!rounded !border-slate-200 focus:!border-teal-400 !py-3 !px-4 !text-sm"
                     disabled={chatLoading}
                   />
                   <Button
@@ -472,12 +439,12 @@ export function AnswerCard({
                     onClick={handleSendMessage}
                     loading={chatLoading}
                     disabled={!chatInput.trim()}
-                    className="!h-11 !px-5 !rounded-xl !bg-gradient-to-r !from-teal-500 !to-emerald-500 !border-0 hover:!from-teal-600 hover:!to-emerald-600"
+                    className="!h-11 !px-5 !rounded !bg-gradient-to-r !from-teal-500 !to-emerald-500 !border-0 hover:!from-teal-600 hover:!to-emerald-600"
                   >
                     发送
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-slate-400 text-center">
+                <p className="mt-2 text-xs text-slate-500 text-center">
                   按 Enter 发送，Shift + Enter 换行（仅可追问一次）
                 </p>
               </>

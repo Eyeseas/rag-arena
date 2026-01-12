@@ -22,7 +22,7 @@ function RootComponent() {
       theme={{
         token: {
           colorPrimary: '#14b8a6',
-          borderRadius: 12,
+          borderRadius: 6,
           fontFamily:
             '"Plus Jakarta Sans", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         },

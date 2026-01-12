@@ -28,97 +28,131 @@ export const MOCK_DELAY = {
 /** 技术文档风格引用 */
 const TECH_DOC_CITATIONS: Omit<Citation, 'id'>[] = [
   {
-    title: 'RAG 系统架构设计指南',
-    content: '检索增强生成（RAG）是一种结合了信息检索和文本生成的混合架构，通过从外部知识库检索相关文档来增强语言模型的生成能力，有效解决了大模型的幻觉问题。',
-    source: 'https://docs.example.com/rag-architecture',
-    relevanceScore: 0.95,
-    location: '第 3 章 - 核心架构',
-    docType: 'webpage',
+    summary: 'RAG系统架构设计指南 - 检索增强生成技术详解',
+    start_time: '2026-01-06 15:23:23',
+    duration: 120,
+    callnumber: '13800138000',
+    callednumber: '13900139000',
+    relevance: 98,
+    labels: '科学|数学|机器',
   },
   {
-    title: '向量数据库性能优化白皮书.pdf',
-    content: '在大规模向量检索场景中，HNSW 算法相比传统的暴力搜索可以将查询延迟从 O(n) 降低到 O(log n)，同时保持 95% 以上的召回率。',
-    source: 'https://papers.example.com/vector-db-optimization.pdf',
-    relevanceScore: 0.87,
-    location: '第 12 页',
-    docType: 'pdf',
+    summary: '向量数据库性能优化白皮书 - HNSW算法在百万级向量检索中的应用',
+    start_time: '2026-01-06 14:15:30',
+    duration: 180,
+    callnumber: '13800138001',
+    callednumber: '13900139001',
+    relevance: 87,
+    labels: '技术|数据库|优化',
   },
   {
-    title: '知识图谱构建最佳实践',
-    content: '结合 RAG 和知识图谱可以提供更精确的语义理解，知识图谱的实体关系能够帮助模型更好地理解查询意图。',
-    relevanceScore: 0.72,
-    docType: 'database',
+    summary: '知识图谱构建最佳实践 - 实体关系抽取与RAG系统集成方案',
+    start_time: '2026-01-06 13:20:45',
+    duration: 95,
+    callnumber: '13800138002',
+    callednumber: '13900139002',
+    relevance: 72,
+    labels: '知识|图谱|实践',
   },
 ]
 
 /** 学术论文风格引用 */
 const ACADEMIC_CITATIONS: Omit<Citation, 'id'>[] = [
   {
-    title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks',
-    content: 'We propose RAG models where the parametric memory is a pre-trained seq2seq model and the non-parametric memory is a dense vector index of Wikipedia, accessed with a pre-trained neural retriever.',
-    source: 'https://arxiv.org/abs/2005.11401',
-    relevanceScore: 0.92,
-    location: 'Abstract',
-    docType: 'pdf',
+    summary: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks - 参数化与非参数化记忆结合',
+    start_time: '2026-01-06 16:30:00',
+    duration: 150,
+    callnumber: '13800138003',
+    callednumber: '13900139003',
+    relevance: 92,
+    labels: '学术|研究|NLP',
   },
   {
-    title: 'Dense Passage Retrieval for Open-Domain QA',
-    content: '密集向量检索在开放域问答任务中显著优于传统的 BM25 稀疏检索方法，Top-20 检索准确率提升了 9-19 个百分点。',
-    source: 'https://aclanthology.org/2020.emnlp-main.550/',
-    relevanceScore: 0.85,
-    location: 'Section 4.2 - Experimental Results',
-    docType: 'pdf',
+    summary: 'Dense Passage Retrieval for Open-Domain QA - 密集向量检索在开放域问答中的性能提升',
+    start_time: '2026-01-06 10:45:12',
+    duration: 200,
+    callnumber: '13800138004',
+    callednumber: '13900139004',
+    relevance: 85,
+    labels: '检索|向量|算法',
   },
 ]
 
 /** 内部文档风格引用 */
 const INTERNAL_DOC_CITATIONS: Omit<Citation, 'id'>[] = [
   {
-    title: '企业知识库接入指南 v2.3',
-    content: '本文档描述了如何将企业内部知识库与 RAG 系统集成，包括数据预处理、向量化配置、检索策略等关键步骤。',
-    relevanceScore: 0.88,
-    location: '技术规范 - 第 5 节',
-    docType: 'file',
+    summary: '企业知识库接入指南 v2.3 - 数据预处理、向量化配置与检索策略',
+    start_time: '2026-01-06 09:10:20',
+    duration: 165,
+    callnumber: '13800138005',
+    callednumber: '13900139005',
+    relevance: 88,
+    labels: '企业|知识库|集成',
   },
   {
-    title: '产品 FAQ 数据库',
-    content: '基于用户反馈和客服记录整理的常见问题解答，覆盖产品使用、故障排查、功能介绍等多个维度共计 2,847 条记录。',
-    source: 'internal://knowledge-base/faq',
-    relevanceScore: 0.79,
-    docType: 'database',
+    summary: '产品FAQ数据库 - 基于用户反馈和客服记录整理的常见问题解答，覆盖产品使用、故障排查、功能介绍',
+    start_time: '2026-01-06 11:25:35',
+    duration: 110,
+    callnumber: '13800138006',
+    callednumber: '13900139006',
+    relevance: 79,
+    labels: '产品|FAQ|数据库',
   },
   {
-    title: 'API 文档 - 检索服务',
-    content: 'POST /api/v1/search 接口支持语义检索和关键词检索的混合模式，可通过 hybrid_weight 参数调整两者的权重比例。',
-    source: 'https://api.example.com/docs/search',
-    relevanceScore: 0.68,
-    location: 'API Reference',
-    docType: 'api',
+    summary: 'API检索服务文档 - POST /api/v1/search接口支持语义检索和关键词检索的混合模式',
+    start_time: '2026-01-06 12:40:50',
+    duration: 140,
+    callnumber: '13800138007',
+    callednumber: '13900139007',
+    relevance: 68,
+    labels: 'API|文档|服务',
   },
   {
-    title: '系统运维手册',
-    content: '推荐的硬件配置：CPU 16核+，内存 64GB+，SSD 存储 500GB+。对于百万级向量库，建议使用 GPU 加速检索。',
-    relevanceScore: 0.55,
-    docType: 'file',
+    summary: '系统运维手册 - 推荐硬件配置：CPU 16核+，内存 64GB+，SSD存储 500GB+',
+    start_time: '2026-01-06 08:15:05',
+    duration: 125,
+    callnumber: '13800138008',
+    callednumber: '13900139008',
+    relevance: 55,
+    labels: '系统|运维|配置',
   },
 ]
 
 /** 混合风格引用 */
 const MIXED_CITATIONS: Omit<Citation, 'id'>[] = [
   {
-    title: 'LangChain RAG 实战教程',
-    content: 'LangChain 提供了完整的 RAG 工具链，包括文档加载器、文本分割器、向量存储、检索器等组件，支持快速构建生产级 RAG 应用。',
-    source: 'https://python.langchain.com/docs/tutorials/rag/',
-    relevanceScore: 0.91,
-    docType: 'webpage',
+    summary: 'LangChain RAG实战教程 - 完整的RAG工具链包括文档加载器、文本分割器、向量存储、检索器等组件',
+    start_time: '2026-01-06 17:00:00',
+    duration: 190,
+    callnumber: '13800138009',
+    callednumber: '13900139009',
+    relevance: 91,
+    labels: '教程|LangChain|实战',
   },
   {
-    title: '大模型应用开发实战.pdf',
-    content: '第8章详细介绍了 RAG 系统的评估方法，包括检索质量评估（召回率、精确率）和生成质量评估（BLEU、ROUGE、人工评价）。',
-    source: 'https://books.example.com/llm-app-dev.pdf',
-    relevanceScore: 0.83,
-    location: '第 8 章第 3 节',
-    docType: 'pdf',
+    summary: '大模型应用开发实战 - 第8章详细介绍了RAG系统的评估方法，包括检索质量评估和生成质量评估',
+    start_time: '2026-01-06 18:20:30',
+    duration: 175,
+    callnumber: '13800138010',
+    callednumber: '13900139010',
+    relevance: 83,
+    labels: '大模型|开发|实战',
+  },
+]
+
+/** 边界情况测试数据 - 只有summary的引用 */
+const MINIMAL_CITATIONS: Omit<Citation, 'id'>[] = [
+  {
+    summary: '仅包含摘要的引用示例',
+  },
+  {
+    summary: '包含时间和相关度的引用',
+    start_time: '2026-01-06 19:30:00',
+    relevance: 75,
+  },
+  {
+    summary: '包含标签的引用示例',
+    labels: '测试|示例|数据',
   },
 ]
 
@@ -128,6 +162,7 @@ const CITATION_TEMPLATES = [
   ACADEMIC_CITATIONS,
   INTERNAL_DOC_CITATIONS,
   MIXED_CITATIONS,
+  MINIMAL_CITATIONS,
 ]
 
 // ============================================================================

@@ -91,7 +91,7 @@ export function HoldToConfirmButton({
   return (
     <motion.button
       className={`
-        relative overflow-hidden px-4 py-1.5 rounded-xl
+        relative overflow-hidden px-4 py-1.5 rounded
         font-medium text-sm
         transition-colors duration-200
         flex items-center gap-2
@@ -135,7 +135,7 @@ export function HoldToConfirmButton({
       <AnimatePresence>
         {isConfirmed && (
           <motion.div
-            className="absolute inset-0 bg-white/20 rounded-xl"
+            className="absolute inset-0 bg-white/20 rounded"
             initial={{ scale: 0, opacity: 0.8 }}
             animate={{ scale: 2, opacity: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}

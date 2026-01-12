@@ -75,7 +75,7 @@ function buildPromptItems(): PromptsItemType[] {
       key: prompt.key,
       label: prompt.title,
       description: prompt.description,
-      icon: iconByKey[prompt.key] || <BulbOutlined className="text-slate-400" />,
+      icon: iconByKey[prompt.key] || <BulbOutlined className="text-slate-500" />,
     })
   }
 
@@ -134,10 +134,10 @@ export function QuestionInput({
   if (disabled) {
     return (
       <div className="w-full">
-        <div className="flex items-center justify-center gap-4 py-6 px-8 rounded-2xl bg-gradient-to-r from-slate-50 via-teal-50/30 to-emerald-50/30 border border-slate-100">
+        <div className="flex items-center justify-center gap-4 py-6 px-8 rounded-md bg-gradient-to-r from-slate-50 via-teal-50/30 to-emerald-50/30 border border-slate-200">
           <div className="flex-1 text-left">
             <div className="text-sm font-medium text-slate-600 mb-1">想要探索新问题？</div>
-            <div className="text-xs text-slate-400">开始一个新的对话，获取更多 AI 模型的回答</div>
+            <div className="text-xs text-slate-500">开始一个新的对话，获取更多 AI 模型的回答</div>
           </div>
           <Button
             type="primary"
@@ -145,7 +145,7 @@ export function QuestionInput({
             onClick={handleReset}
             size="large"
             disabled={loading}
-            className="!rounded-xl !h-11 !px-6 !text-sm !font-medium bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 !border-0 !shadow-lg !shadow-teal-500/25 hover:!shadow-xl hover:!shadow-teal-500/35 hover:scale-105 transition-all duration-300"
+            className="!rounded !h-11 !px-6 !text-sm !font-medium bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 !border-0 !shadow-lg !shadow-teal-500/25 hover:!shadow-xl hover:!shadow-teal-500/35 hover:scale-105 transition-all duration-300"
           >
             新会话
           </Button>
@@ -156,7 +156,7 @@ export function QuestionInput({
 
   // 头部内容：时间选择器 + Prompt 展开区
   const headerNode = (
-    <div className="border-b border-slate-100/80">
+    <div className="border-b border-slate-200">
       {/* Prompts 展开面板 */}
       <Collapse
         ghost
@@ -164,7 +164,7 @@ export function QuestionInput({
         onChange={(keys) => setPromptsExpanded(keys.includes('prompts'))}
         expandIcon={({ isActive }) => (
           <DownOutlined
-            className="!text-slate-400 transition-transform duration-300"
+            className="!text-slate-500 transition-transform duration-300"
             style={{ transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)' }}
           />
         )}
@@ -175,7 +175,7 @@ export function QuestionInput({
               <span className="flex items-center gap-2 text-sm">
                 <BulbOutlined className="text-amber-500" />
                 <span className="font-medium text-slate-600">Prompt 模板库</span>
-                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                <span className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
                   {ARENA_PROMPT_TEMPLATES.length} 个模板
                 </span>
               </span>
@@ -193,7 +193,7 @@ export function QuestionInput({
       {/* 时间范围选择器 */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-teal-50/50 via-emerald-50/30 to-cyan-50/50">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
             <CalendarOutlined className="text-white text-xs" />
           </div>
           <span className="text-sm font-medium text-slate-600">时间范围</span>
@@ -207,7 +207,7 @@ export function QuestionInput({
             allowClear
             size="small"
             disabled={loading}
-            className="!rounded-xl !border-slate-200 hover:!border-teal-400 focus-within:!border-teal-500 focus-within:!shadow-sm focus-within:!shadow-teal-500/20"
+            className="!rounded !border-slate-200 hover:!border-teal-400 focus-within:!border-teal-500 focus-within:!shadow-sm focus-within:!shadow-teal-500/20"
           />
           {dateRange && (
             <Tooltip title="清除时间范围">
@@ -216,7 +216,7 @@ export function QuestionInput({
                 size="small"
                 icon={<CloseCircleOutlined />}
                 onClick={() => setDateRange(null)}
-                className="!text-slate-400 hover:!text-red-500 hover:!bg-red-50 !rounded-lg transition-all"
+                className="!text-slate-500 hover:!text-red-600 hover:!bg-red-50 !rounded transition-all cursor-pointer"
               />
             </Tooltip>
           )}
@@ -230,10 +230,10 @@ export function QuestionInput({
       {/* 主输入框卡片 */}
       <div className="relative group">
         {/* 背景光晕效果 */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 rounded-3xl opacity-15 blur-xl group-hover:opacity-25 transition-opacity duration-500" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 rounded-lg opacity-15 blur-xl group-hover:opacity-25 transition-opacity duration-500" />
 
         {/* 输入框容器 - 单一边框 */}
-        <div className="relative rounded-2xl overflow-hidden shadow-lg shadow-slate-200/40 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 bg-white/95 backdrop-blur-xl border border-slate-200/60 hover:border-teal-300/50">
+        <div className="relative rounded-md overflow-hidden shadow-lg shadow-slate-200/40 hover:shadow-xl hover:shadow-teal-200/30 transition-all duration-300 bg-white/95 backdrop-blur-xl border border-slate-200/60 hover:border-teal-300/50">
           <Sender
             ref={senderRef}
             value={mergedValue}
@@ -249,8 +249,8 @@ export function QuestionInput({
               if (loading) {
                 return (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 animate-pulse">正在思考...</span>
-                    <LoadingButton className="!rounded-xl" />
+                    <span className="text-xs text-slate-600 animate-pulse">正在思考...</span>
+                    <LoadingButton className="!rounded" />
                   </div>
                 )
               }
@@ -258,7 +258,7 @@ export function QuestionInput({
                 <Tooltip title="发送问题 (Enter)">
                   <SendButton
                     icon={<SendOutlined className="rotate-[-45deg] text-lg" />}
-                    className="!w-11 !h-11 !rounded-xl !bg-gradient-to-br !from-teal-500 !via-emerald-500 !to-cyan-500 hover:!from-teal-600 hover:!via-emerald-600 hover:!to-cyan-600 !border-0 !shadow-lg !shadow-teal-500/25 hover:!shadow-xl hover:!shadow-teal-500/35 hover:scale-105 transition-all duration-300"
+                    className="!w-11 !h-11 !rounded !bg-gradient-to-br !from-teal-500 !via-emerald-500 !to-cyan-500 hover:!from-teal-600 hover:!via-emerald-600 hover:!to-cyan-600 !border-0 !shadow-lg !shadow-teal-500/25 hover:!shadow-xl hover:!shadow-teal-500/35 hover:scale-105 transition-all duration-300"
                   />
                 </Tooltip>
               )
@@ -269,15 +269,15 @@ export function QuestionInput({
 
       {/* 底部提示 */}
       <div className="mt-4 flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <kbd className="px-2 py-1 bg-white/80 rounded-lg text-slate-500 font-mono text-[11px] shadow-sm border border-slate-100">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <kbd className="px-2 py-1 bg-white/80 rounded text-slate-600 font-mono text-[11px] shadow-sm border border-slate-200">
             Enter
           </kbd>
           <span>发送</span>
         </div>
         <div className="w-px h-3 bg-slate-200" />
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <kbd className="px-2 py-1 bg-white/80 rounded-lg text-slate-500 font-mono text-[11px] shadow-sm border border-slate-100">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <kbd className="px-2 py-1 bg-white/80 rounded text-slate-600 font-mono text-[11px] shadow-sm border border-slate-200">
             Shift + Enter
           </kbd>
           <span>换行</span>

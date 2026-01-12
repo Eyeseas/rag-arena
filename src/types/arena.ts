@@ -29,9 +29,6 @@ export interface Task {
 // 引用 (Citation) 相关类型
 // ============================================================================
 
-/** 文档类型枚举 */
-export type DocType = 'pdf' | 'webpage' | 'database' | 'api' | 'file' | 'other'
-
 /**
  * 单个引用摘要
  * 表示回答中引用的外部文档或知识来源
@@ -39,18 +36,20 @@ export type DocType = 'pdf' | 'webpage' | 'database' | 'api' | 'file' | 'other'
 export interface Citation {
   /** 引用唯一标识 */
   id: string
-  /** 文档标题 */
-  title: string
-  /** 摘要内容 - 从源文档中提取的相关片段 */
-  content: string
-  /** 文档来源/URL (可选) - 用于跳转到原始文档 */
-  source?: string
-  /** 相关性分数 (0-1，可选) - 表示该引用与问题的相关程度 */
-  relevanceScore?: number
-  /** 页码或章节 (可选) - 精确定位信息 */
-  location?: string
-  /** 文档类型标签 (可选) - 用于展示不同的图标或样式 */
-  docType?: DocType
+  /** 引用的摘要内容 */
+  summary: string
+  /** 通话开始时间，格式yyyy-MM-dd HH:mm:ss */
+  start_time?: string
+  /** 通话时长，单位：秒 */
+  duration?: number
+  /** 主号码 */
+  callnumber?: string
+  /** 被号码 */
+  callednumber?: string
+  /** 相关度，0～100（可选） */
+  relevance?: number
+  /** 相关标签，用"|"分割（可选） */
+  labels?: string
 }
 
 // ============================================================================

@@ -145,7 +145,7 @@ function SkeletonCard({ index }: { index: number }) {
 
   return (
     <Card
-      className="!rounded-2xl overflow-hidden animate-pulse-soft"
+      className="!rounded-md overflow-hidden animate-pulse-soft"
       styles={{
         header: {
           borderBottom: 'none',
@@ -159,7 +159,7 @@ function SkeletonCard({ index }: { index: number }) {
         <div className="flex items-center gap-3">
           <div
             className={`
-              w-10 h-10 rounded-xl bg-gradient-to-br ${gradients[index % 4]}
+              w-10 h-10 rounded bg-gradient-to-br ${gradients[index % 4]}
               flex items-center justify-center shadow-md
               text-white font-bold text-lg
             `}
@@ -168,7 +168,7 @@ function SkeletonCard({ index }: { index: number }) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-slate-700 font-semibold">模型 {labels[index % 4]}</span>
-            <span className="text-xs text-slate-400">正在生成回答...</span>
+            <span className="text-xs text-slate-500">正在生成回答...</span>
           </div>
         </div>
       }

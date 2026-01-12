@@ -244,7 +244,7 @@ function ArenaPage() {
                     RAG 问答竞技场
                   </Title>
                   {!isActive && (
-                    <span className="text-slate-500 text-sm mt-1 animate-fade-in">
+                    <span className="text-slate-600 text-sm mt-1 animate-fade-in">
                       <ThunderboltOutlined className="mr-1.5 text-amber-500" />
                       对比多个 AI 模型的回答，为最佳答案投票
                     </span>

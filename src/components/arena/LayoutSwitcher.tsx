@@ -43,7 +43,7 @@ export function LayoutSwitcher({ value, onChange }: LayoutSwitcherProps) {
     <Segmented
       value={value}
       onChange={(val) => onChange(val as LayoutMode)}
-      className="!bg-slate-100/80 !rounded-xl !p-1"
+      className="!bg-slate-100/80 !rounded !p-1"
       options={layoutOptions.map((opt) => ({
         value: opt.value,
         label: (
