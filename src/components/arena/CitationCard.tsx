@@ -8,6 +8,8 @@ interface CitationCardProps {
   citation: Citation
   /** 序号 */
   index: number
+  /** 点击回调 */
+  onClick?: (citation: Citation) => void
 }
 
 // 格式化时长（秒转为分钟:秒）
@@ -53,7 +55,7 @@ function getRelevanceStyle(relevance: number) {
   }
 }
 
-export function CitationCard({ citation, index }: CitationCardProps) {
+export function CitationCard({ citation, index, onClick }: CitationCardProps) {
   const labels = citation.labels?.split('|').filter(Boolean) || []
   const formattedDuration = formatDuration(citation.duration)
   const formattedDate = formatDate(citation.start_time)
@@ -65,8 +67,15 @@ export function CitationCard({ citation, index }: CitationCardProps) {
     ? getRelevanceStyle(citation.relevance)
     : null
 
+  const handleClick = () => {
+    onClick?.(citation)
+  }
+
   return (
-    <div className="py-2 border-b border-slate-100 last:border-b-0">
+    <div 
+      className={`py-2 border-b border-slate-100 last:border-b-0 ${onClick ? 'cursor-pointer hover:bg-slate-50 transition-colors duration-200 rounded px-2 -mx-2 -my-1 my-1 hover:shadow-sm' : ''}`}
+      onClick={handleClick}
+    >
       <div className="flex items-start gap-2.5">
         {/* 序号 */}
         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-semibold flex items-center justify-center mt-0.5">

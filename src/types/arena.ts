@@ -52,6 +52,41 @@ export interface Citation {
   labels?: string
 }
 
+/**
+ * 引用详情
+ * 引用详情接口返回的完整信息
+ * 
+ * @remarks
+ * 对应 API: GET /api/v1/reference/detail/{ref_id}
+ */
+export interface CitationDetail {
+  /** 引用标识ID */
+  ref_id: string
+  /** 转写内容json数组的字符串化 */
+  content: string
+  /** 翻译内容数组的字符串化 */
+  trans?: string
+  /** 时间点，单位：秒 */
+  time_point?: number
+  /** 关键要素 */
+  key_elements?: {
+    /** 人物数组 */
+    persons?: string[]
+    /** 组织数组 */
+    oragnizations?: string[]
+    /** 事件数组 */
+    events?: string[]
+    /** 其余元素数组 */
+    others?: string[]
+  }
+  /** 语音文件URL（可选） */
+  file?: string
+  /** 开始时间（可选），引用语音文件中开始时间，单位：秒 */
+  begin_time?: number
+  /** 结束时间（可选），引用语音文件中结束时间，单位：秒 */
+  end_time?: number
+}
+
 // ============================================================================
 // 回答 (Answer) 相关类型
 // ============================================================================

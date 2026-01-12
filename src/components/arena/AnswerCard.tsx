@@ -13,8 +13,9 @@ import {
 } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
 import '@ant-design/x-markdown/themes/light.css'
-import type { Answer } from '@/types/arena'
+import type { Answer, Citation } from '@/types/arena'
 import { CitationCard } from './CitationCard'
+import { CitationDetailDrawer } from './CitationDetailDrawer'
 import { HoldToConfirmButton } from './HoldToConfirmButton'
 
 /** 对话消息类型 */
@@ -95,6 +96,8 @@ export function AnswerCard({
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [hasAskedFollowUp, setHasAskedFollowUp] = useState(false) // 是否已追问过
+  const [citationDrawerOpen, setCitationDrawerOpen] = useState(false)
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null)
   const hasCitations = answer.citations && answer.citations.length > 0
   const hasError = Boolean(answer.error)
   const hasContent = answer.content.length > 0
@@ -159,6 +162,18 @@ export function AnswerCard({
       e.preventDefault()
       handleSendMessage()
     }
+  }
+
+  // 处理引用卡片点击
+  const handleCitationClick = (citation: Citation) => {
+    setSelectedCitation(citation)
+    setCitationDrawerOpen(true)
+  }
+
+  // 关闭引用详情抽屉
+  const handleCloseCitationDrawer = () => {
+    setCitationDrawerOpen(false)
+    setSelectedCitation(null)
   }
 
   return (
@@ -287,7 +302,12 @@ export function AnswerCard({
           {citationsExpanded && (
             <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
               {answer.citations!.map((citation, index) => (
-                <CitationCard key={citation.id} citation={citation} index={index} />
+                <CitationCard 
+                  key={citation.id} 
+                  citation={citation} 
+                  index={index}
+                  onClick={handleCitationClick}
+                />
               ))}
             </div>
           )}
@@ -369,7 +389,12 @@ export function AnswerCard({
                 </div>
                 <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
                   {answer.citations!.map((citation, index) => (
-                    <CitationCard key={citation.id} citation={citation} index={index} />
+                    <CitationCard 
+                      key={citation.id} 
+                      citation={citation} 
+                      index={index}
+                      onClick={handleCitationClick}
+                    />
                   ))}
                 </div>
               </div>
@@ -452,6 +477,13 @@ export function AnswerCard({
           </div>
         </div>
       </Modal>
+
+      {/* 引用详情抽屉 */}
+      <CitationDetailDrawer
+        open={citationDrawerOpen}
+        citation={selectedCitation}
+        onClose={handleCloseCitationDrawer}
+      />
     </Card>
   )
 }
