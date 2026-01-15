@@ -144,8 +144,65 @@ export function QuestionInput({
         sessionId = await startSessionWithQuestion(trimmed)
       }
 
+      // 获取当前会话
+      let currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
+      
+      // 如果会话没有priIdMapping，先调用创建对话接口
+      if (!currentSession?.priIdMapping) {
+        try {
+          const response = await arenaApi.createConversation(getUserId(), {
+            taskId: activeTaskId,
+            messages: [],
+          })
+
+          let serverSessionId = ''
+          let priIdMapping: Record<string, string> | undefined
+          if (response.code === 200 || response.code === 0) {
+            serverSessionId = response.data.sessionId
+            priIdMapping = response.data.priIdMapping
+          } else {
+            message.error('创建会话失败，请重试')
+            return
+          }
+
+          // 更新会话，保存priIdMapping和serverSessionId
+          const finalSessionId = serverSessionId || sessionId
+          
+          // 更新会话的priIdMapping和sessionId
+          useArenaStore.setState((state) => ({
+            sessions: state.sessions.map((s) => 
+              s.id === sessionId 
+                ? { 
+                    ...s, 
+                    id: finalSessionId, // 使用服务器返回的sessionId
+                    priIdMapping,
+                    serverQuestionId: null,
+                    answers: [],
+                    votedAnswerId: null,
+                  }
+                : s
+            ),
+            activeSessionId: finalSessionId,
+          }))
+
+          // 更新当前会话引用和sessionId
+          sessionId = finalSessionId
+          currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : '创建会话失败，请重试')
+          return
+        }
+      }
+
+      // 获取当前会话的priIdMapping
+      const priIdMapping = currentSession?.priIdMapping
+
+      if (!priIdMapping) {
+        message.error('未找到模型映射信息，请重新创建会话')
+        return
+      }
+
       // 获取当前会话的消息历史
-      const currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
       const messages = currentSession
         ? [
             ...(currentSession.answers.map((a) => ({
@@ -169,83 +226,62 @@ export function QuestionInput({
         end_time: endTime,
       }
 
-      // 初始化答案 - 预先创建4个模型框（A、B、C、D），确保它们一直存在
+      // 初始化答案 - 预先创建4个模型框，确保它们一直存在
       setServerQuestionId(null)
       
-      // 将 maskCode 映射到 providerId (ALPHA->A, BETA->B, CHARLIE->C, DELTA->D)
-      const providerIdMap: Record<string, string> = {
+      // 将 maskCode 映射到 providerId (ALPHA->A, BRAVO->B, CHARLIE->C, DELTA->D)
+      const maskCodeToProviderId: Record<string, string> = {
         ALPHA: 'A',
-        BETA: 'B',
+        BRAVO: 'B',
         CHARLIE: 'C',
         DELTA: 'D',
       }
       
-      // 创建4个空的answer框，使用providerId作为id
-      const initialAnswers = ['A', 'B', 'C', 'D'].map((providerId) => ({
-        id: providerId, // 使用providerId作为id，方便根据maskCode查找
-        providerId,
-        content: '',
-      }))
+      // 定义模型顺序：A、B、C、D
+      const orderedMaskCodes = ['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA']
+      
+      // 根据priIdMapping创建answer框（按A、B、C、D顺序）
+      const initialAnswers = orderedMaskCodes
+        .filter((maskCode) => priIdMapping[maskCode]) // 只创建存在的模型
+        .map((maskCode) => {
+          const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+          return {
+            id: providerId, // 使用providerId作为id
+            providerId,
+            content: '',
+          }
+        })
       setAnswers(initialAnswers)
 
-      // 记录 privateId 到 providerId 的映射，用于onDone时分配citations
-      const privateIdToProviderId = new Map<string, string>()
-
-      // 调用流式接口 - 立即更新，不使用缓冲
-      await arenaApi.chatConversation(getUserId(), request, {
-        onDelta: (sessionId, content, privateId, maskCode, maskName) => {
-          // 过滤掉 <think> 标签内容（模型的思考过程，不应该显示）
-          // 只过滤纯标签或只包含换行的内容
-          const trimmedContent = content.trim()
-          if (trimmedContent === '<think>' || trimmedContent === '</think>' || trimmedContent === '') {
-            return
-          }
-          
-          // 根据 maskCode 映射到 providerId，找到对应的 answer
-          if (!maskCode) return
-          
-          const providerId = providerIdMap[maskCode] || maskCode.charAt(0)
-          const answerId = providerId // 使用providerId作为answerId
-          
-          // 记录 privateId 到 providerId 的映射
-          if (privateId) {
-            privateIdToProviderId.set(privateId, providerId)
-          }
-          
-          // 立即追加内容到对应的answer框 - 确保实时显示
-          appendAnswerDelta(answerId, content)
-        },
-        onDone: (sessionId, citations, privateId) => {
-          // 根据 privateId 找到对应的 providerId，然后更新对应的 answer
-          if (privateId && privateIdToProviderId.has(privateId)) {
-            const providerId = privateIdToProviderId.get(privateId)!
+      // 调用多模型流式接口 - 按顺序发送4个SSE请求（A、B、C、D）
+      await arenaApi.chatConversationMultiModel(
+        getUserId(),
+        request,
+        priIdMapping,
+        {
+          onDelta: (maskCode, content) => {
+            // 根据 maskCode 映射到 providerId
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            const answerId = providerId
+            
+            // 立即追加内容到对应的answer框 - 确保实时显示
+            appendAnswerDelta(answerId, content)
+          },
+          onDone: (maskCode, citations) => {
+            // 根据 maskCode 找到对应的 providerId，然后更新对应的 answer
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
             finalizeAnswer(providerId, {
               citations,
             })
-          } else if (citations) {
-            // 如果没有privateId映射，但有citations，尝试更新所有answer
-            // 这种情况应该很少见
-            const currentSessions = useArenaStore.getState().sessions
-            const currentSession = currentSessions.find((s) => s.id === sessionId)
-            if (currentSession) {
-              currentSession.answers.forEach((answer) => {
-                if (!answer.citations || answer.citations.length === 0) {
-                  finalizeAnswer(answer.id, {
-                    citations,
-                  })
-                }
-              })
-            }
-          }
-        },
-        onError: (error) => {
-          message.error(error.message || '获取回答失败，请重试')
-          // 为所有答案设置错误（如果无法确定具体是哪个模型出错）
-          initialAnswers.forEach((answer) => {
-            setAnswerError(answer.id, error.message)
-          })
-        },
-      })
+          },
+          onError: (maskCode, error) => {
+            message.error(`模型 ${maskCode} 获取回答失败: ${error.message}`)
+            // 为对应的模型设置错误
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            setAnswerError(providerId, error.message)
+          },
+        }
+      )
     } catch (error) {
       message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
       setServerQuestionId(null)

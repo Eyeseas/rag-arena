@@ -28,6 +28,8 @@ export interface ArenaSession {
   answers: Answer[]
   /** 已点赞的回答 ID */
   votedAnswerId: string | null
+  /** 模型代码到priId的映射（从创建对话接口返回） */
+  priIdMapping?: Record<string, string>
 }
 
 interface ArenaState {
@@ -126,6 +128,7 @@ function createEmptySession(taskId: string, partial?: Partial<ArenaSession>): Ar
     serverQuestionId: partial?.serverQuestionId ?? null,
     answers: partial?.answers ?? [],
     votedAnswerId: partial?.votedAnswerId ?? null,
+    priIdMapping: partial?.priIdMapping,
   }
 }
 
@@ -264,68 +267,26 @@ export const useArenaStore = create<ArenaState>()(
         startNewSession: async () => {
           const { activeTaskId, sessions } = get()
           
-          try {
-            // 调用创建对话接口
-            const userId = getUserId()
-            const response = await arenaApi.createConversation(userId, {
-              taskId: activeTaskId,
-              messages: [],
-            })
+          // 不调用接口，只创建本地会话（空会话，等待用户输入问题后再创建）
+          const newSession = createEmptySession(activeTaskId)
 
-            // 如果接口返回成功，使用服务器返回的 sessionId
-            let sessionId = ''
-            if (response.code === 200 || response.code === 0) {
-              sessionId = response.data.sessionId
-            } else {
-              // 如果接口返回失败，使用本地生成的 ID
-              console.warn('[ArenaStore] createConversation failed, using local session ID')
-              sessionId = createId()
-            }
+          // 限制每个任务的会话数量
+          const taskSessions = sessions.filter((s) => s.taskId === activeTaskId)
+          let nextSessions = [newSession, ...sessions]
 
-            // 创建新会话，使用服务器返回的 sessionId（如果有）
-            const newSession = createEmptySession(activeTaskId, {
-              id: sessionId || createId(),
-            })
-
-            // 限制每个任务的会话数量
-            const taskSessions = sessions.filter((s) => s.taskId === activeTaskId)
-            let nextSessions = [newSession, ...sessions]
-
-            if (taskSessions.length >= MAX_SESSIONS_PER_TASK) {
-              // 删除该任务下最旧的会话
-              const oldestSession = taskSessions.sort((a, b) => a.updatedAt - b.updatedAt)[0]
-              nextSessions = nextSessions.filter((s) => s.id !== oldestSession.id)
-            }
-
-            set({
-              sessions: nextSessions,
-              activeSessionId: newSession.id,
-            })
-
-            touchTask(activeTaskId)
-            return newSession.id
-          } catch (error) {
-            // 如果接口调用失败，使用本地生成的会话
-            console.error('[ArenaStore] startNewSession failed, using local session:', error)
-            const { activeTaskId, sessions } = get()
-            const newSession = createEmptySession(activeTaskId)
-
-            const taskSessions = sessions.filter((s) => s.taskId === activeTaskId)
-            let nextSessions = [newSession, ...sessions]
-
-            if (taskSessions.length >= MAX_SESSIONS_PER_TASK) {
-              const oldestSession = taskSessions.sort((a, b) => a.updatedAt - b.updatedAt)[0]
-              nextSessions = nextSessions.filter((s) => s.id !== oldestSession.id)
-            }
-
-            set({
-              sessions: nextSessions,
-              activeSessionId: newSession.id,
-            })
-
-            touchTask(activeTaskId)
-            return newSession.id
+          if (taskSessions.length >= MAX_SESSIONS_PER_TASK) {
+            // 删除该任务下最旧的会话
+            const oldestSession = taskSessions.sort((a, b) => a.updatedAt - b.updatedAt)[0]
+            nextSessions = nextSessions.filter((s) => s.id !== oldestSession.id)
           }
+
+          set({
+            sessions: nextSessions,
+            activeSessionId: newSession.id,
+          })
+
+          touchTask(activeTaskId)
+          return newSession.id
         },
 
         setActiveSessionId: (sessionId) => {
@@ -399,45 +360,19 @@ export const useArenaStore = create<ArenaState>()(
             active.votedAnswerId
 
           if (shouldCreateNew) {
-            // 调用创建对话接口
-            try {
-              const userId = getUserId()
-              const response = await arenaApi.createConversation(userId, {
-                taskId: activeTaskId,
-                messages: [],
-              })
-
-              let sessionId = ''
-              if (response.code === 200 || response.code === 0) {
-                sessionId = response.data.sessionId
-              } else {
-                sessionId = createId()
-              }
-
-              const newSession = createEmptySession(activeTaskId, {
-                id: sessionId || createId(),
-                question: safeQuestion,
-              })
-              set((state) => ({
-                sessions: [newSession, ...state.sessions],
-                activeSessionId: newSession.id,
-              }))
-              touchTask(activeTaskId)
-              return newSession.id
-            } catch (error) {
-              console.error('[ArenaStore] startSessionWithQuestion failed:', error)
-              // 失败时使用本地生成的会话
-              const newSession = createEmptySession(activeTaskId, { question: safeQuestion })
-              set((state) => ({
-                sessions: [newSession, ...state.sessions],
-                activeSessionId: newSession.id,
-              }))
-              touchTask(activeTaskId)
-              return newSession.id
-            }
+            // 不调用接口，只创建本地会话（等待发送问题时再创建）
+            const newSession = createEmptySession(activeTaskId, {
+              question: safeQuestion,
+            })
+            set((state) => ({
+              sessions: [newSession, ...state.sessions],
+              activeSessionId: newSession.id,
+            }))
+            touchTask(activeTaskId)
+            return newSession.id
           }
 
-          // 更新当前会话
+          // 更新当前会话（保留priIdMapping）
           updateActiveSession((s) => ({
             ...s,
             question: safeQuestion,
@@ -446,6 +381,8 @@ export const useArenaStore = create<ArenaState>()(
             serverQuestionId: null,
             answers: [],
             votedAnswerId: null,
+            // 保留priIdMapping
+            priIdMapping: s.priIdMapping,
           }))
           touchTask(activeTaskId)
           return activeSessionId

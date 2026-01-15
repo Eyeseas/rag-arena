@@ -555,11 +555,161 @@ export interface ChatStreamHandlers {
   /** 完成回调 */
   onDone: (sessionId: string, citations?: Citation[], privateId?: string) => void
   /** 错误回调 */
-  onError: (error: Error) => void
+  onError: (error: Error, maskCode?: string) => void
 }
 
 /**
- * 对话开始（流式）
+ * 多模型对话流式回调处理器
+ */
+export interface MultiModelChatStreamHandlers {
+  /** 增量内容回调 - maskCode用于标识是哪个模型 */
+  onDelta: (maskCode: string, content: string) => void
+  /** 完成回调 - maskCode用于标识是哪个模型 */
+  onDone: (maskCode: string, citations?: Citation[]) => void
+  /** 错误回调 - maskCode用于标识是哪个模型 */
+  onError: (maskCode: string, error: Error) => void
+}
+
+/**
+ * 多模型对话开始（流式）- 按顺序发送4个SSE请求（A、B、C、D）
+ * 
+ * @param userId 用户ID
+ * @param request 对话请求基础参数
+ * @param priIdMapping 模型代码到priId的映射
+ * @param handlers 流式回调处理器
+ * 
+ * @example
+ * ```ts
+ * await chatConversationMultiModel('user_123', {
+ *   taskId: 'task_1',
+ *   session_id: 'session_123',
+ *   messages: [{ role: 'user', content: '你好' }]
+ * }, {
+ *   ALPHA: 'priId1',
+ *   BRAVO: 'priId2',
+ *   CHARLIE: 'priId3',
+ *   DELTA: 'priId4',
+ * }, {
+ *   onDelta: (maskCode, content) => console.log('Delta:', maskCode, content),
+ *   onDone: (maskCode, citations) => console.log('Done:', maskCode, citations),
+ *   onError: (maskCode, error) => console.error('Error:', maskCode, error),
+ * })
+ * ```
+ * 
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * POST /conv/chat (4次，按顺序：ALPHA、BRAVO、CHARLIE、DELTA，每次使用不同的priId)
+ * Headers: { userId: string, Accept: 'text/event-stream' }
+ * Body: CreateConversationRequest (包含priId)
+ * 
+ * 通过 Vite proxy 代理到: http://192.168.157.104:8901/conv/chat
+ * 前端调用路径: /api/conv/chat (会被 proxy 转发)
+ * 
+ * 注意：按顺序执行，每个模型完成后再发送下一个模型的请求
+ */
+export async function chatConversationMultiModel(
+  userId: string,
+  request: Omit<CreateConversationRequest, 'priId'>,
+  priIdMapping: Record<string, string>,
+  handlers: MultiModelChatStreamHandlers,
+): Promise<void> {
+  console.log('chatConversationMultiModel', userId, request, priIdMapping)
+  
+  // 如果使用 mock 模式，模拟流式响应
+  if (shouldUseMock()) {
+    await delay(MOCK_DELAY.streamInit)
+    
+    const maskCodes = Object.keys(priIdMapping)
+    for (const maskCode of maskCodes) {
+      const mockContent = `这是模型 ${maskCode} 的模拟回答内容。`
+      const deltas = splitTextToChunks(mockContent, 10)
+      
+      for (const delta of deltas) {
+        await delay(50)
+        handlers.onDelta(maskCode, delta)
+      }
+      
+      handlers.onDone(maskCode, [])
+    }
+    return
+  }
+  
+  // 真实接口调用 - 按顺序发送4个SSE请求（A、B、C、D）
+  const { readSseStream } = await import('@/lib/sse')
+  
+  // 模型代码到providerId的映射
+  const maskCodeToProviderId: Record<string, string> = {
+    ALPHA: 'A',
+    BRAVO: 'B',
+    CHARLIE: 'C',
+    DELTA: 'D',
+  }
+  
+  // 定义模型顺序：A、B、C、D
+  const orderedMaskCodes = ['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA']
+  
+  // 按顺序发送所有模型的SSE请求
+  for (const maskCode of orderedMaskCodes) {
+    const priId = priIdMapping[maskCode]
+    if (!priId) {
+      console.warn(`[ArenaApi] No priId found for ${maskCode}, skipping`)
+      continue
+    }
+    
+    try {
+      const response = await fetch('/api/conv/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+          userId,
+        },
+        body: JSON.stringify({
+          ...request,
+          priId,
+        }),
+      })
+      
+      if (!response.ok) {
+        const text = await response.text().catch(() => '')
+        throw new Error(text || `HTTP ${response.status}`)
+      }
+      
+      // 解析SSE流
+      await readSseStream(response, (msg) => {
+        try {
+          const data: ChatStreamEvent = JSON.parse(msg.data)
+          
+          // 处理增量内容
+          if (data.choices && data.choices.length > 0) {
+            const choice = data.choices[0]
+            if (choice.delta?.content) {
+              // 过滤掉 <think> 标签内容
+              const trimmedContent = choice.delta.content.trim()
+              if (trimmedContent !== '<think>' && trimmedContent !== '</think>' && trimmedContent !== '') {
+                handlers.onDelta(maskCode, choice.delta.content)
+              }
+            }
+            
+            // 如果完成，调用 onDone
+            if (choice.finish_reason) {
+              handlers.onDone(maskCode, data.citations)
+            }
+          }
+        } catch (error) {
+          console.error(`[ArenaApi] Failed to parse SSE event for ${maskCode}:`, error)
+          handlers.onError(maskCode, error instanceof Error ? error : new Error('Failed to parse SSE event'))
+        }
+      })
+    } catch (error) {
+      console.error(`[ArenaApi] chatConversationMultiModel failed for ${maskCode}:`, error)
+      handlers.onError(maskCode, error instanceof Error ? error : new Error('Unknown error'))
+    }
+  }
+}
+
+/**
+ * 对话开始（流式）- 单模型版本（保留用于向后兼容）
  * 
  * @param userId 用户ID
  * @param request 对话请求
@@ -766,8 +916,10 @@ export const arenaApi = {
   getTaskList,
   /** 创建对话 */
   createConversation,
-  /** 对话开始 (流式) */
+  /** 对话开始 (流式) - 单模型版本 */
   chatConversation,
+  /** 对话开始 (流式) - 多模型并行版本 */
+  chatConversationMultiModel,
   /** 添加任务 */
   addTask,
 }

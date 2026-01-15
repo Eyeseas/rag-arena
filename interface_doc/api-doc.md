@@ -359,7 +359,12 @@
 	"msg": "",
 	"data": {
 		"sessionId": "",
-		"priIdMapping": {}
+		"priIdMapping": {
+			"ALPHA": "2c3f03052880ef0d2535a411e17ec52b",
+			"BRAVO": "44a55a353da21c475975fcd611ba1986",
+			"DELTA": "0d784b015da8bca3b272141dd7a6f30d",
+			"CHARLIE": "dd78e6685f7e47b2c209c2bd4bd9b2c3"
+		}
 	}
 }
 ```
