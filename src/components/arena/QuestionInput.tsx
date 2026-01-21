@@ -94,7 +94,10 @@ export function QuestionInput({
   onReset,
 }: QuestionInputProps) {
   const [innerValue, setInnerValue] = useState('')
-  const [dateRange, setDateRange] = useState<DateRange>(null)
+  const [dateRange, setDateRange] = useState<DateRange>([
+    dayjs().subtract(7, 'day'),
+    dayjs(),
+  ])
   const [promptsExpanded, setPromptsExpanded] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const senderRef = useRef<SenderRef>(null)
