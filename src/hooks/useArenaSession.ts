@@ -5,7 +5,7 @@
  */
 
 import { useArenaStore, type ArenaSession } from '@/stores/arena'
-import { selectActiveSession } from '@/stores/arenaSelectors'
+import { selectActiveSession, selectCitationsCount } from '@/stores/arenaSelectors'
 
 /**
  * 当前会话状态 Hook 返回值
@@ -64,7 +64,7 @@ export function useArenaSession(): UseArenaSessionReturn {
   const votedAnswerId = activeSession?.votedAnswerId || null
   const hasAnswers = answers.length > 0
   const isActive = hasAnswers || isLoading
-  const citationsCount = answers.reduce((sum, a) => sum + (a.citations?.length || 0), 0)
+  const citationsCount = selectCitationsCount(answers)
 
   return {
     activeSessionId,

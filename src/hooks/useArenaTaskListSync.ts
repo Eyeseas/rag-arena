@@ -8,10 +8,7 @@ import { useCallback } from 'react'
 import { message } from 'antd'
 import { arenaApi } from '@/services/arena'
 import { useArenaStore } from '@/stores/arena'
-
-function getUserId(): string {
-  return localStorage.getItem('userId') || 'default_user'
-}
+import { getUserId } from '@/lib/userId'
 
 export interface UseArenaTaskListSyncReturn {
   fetchTaskList: (opts?: { force?: boolean }) => Promise<void>
