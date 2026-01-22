@@ -18,6 +18,7 @@ import {
 import clsx from 'clsx'
 import { useArenaStore } from '@/stores/arena'
 import { arenaApi } from '@/services/arena'
+import { useArenaTaskListSync } from '@/hooks'
 
 interface TaskSidebarProps {
   className?: string
@@ -54,9 +55,10 @@ export function TaskSidebar({
     deleteSession,
     renameSession,
     setActiveTaskId,
-    fetchTasksFromServer,
     isTasksLoading,
   } = useArenaStore()
+
+  const { fetchTaskList } = useArenaTaskListSync()
 
   // 获取 userId（从 localStorage 或使用默认值）
   const getUserId = () => {
@@ -79,7 +81,7 @@ export function TaskSidebar({
     const userId = getUserId()
     if (userId) {
       hasFetchedRef.current = true
-      fetchTasksFromServer(userId)
+      fetchTaskList()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 只在组件挂载时执行一次，fetchTasksFromServer 是稳定的引用
@@ -129,7 +131,7 @@ export function TaskSidebar({
         createTaskForm.resetFields()
         
         // 刷新任务列表
-        await fetchTasksFromServer(userId, true)
+        await fetchTaskList({ force: true })
         
         onAfterSelect?.()
       } else {
@@ -328,7 +330,7 @@ export function TaskSidebar({
                 const userId = getUserId()
                 if (userId) {
                   // 强制刷新，忽略 hasFetchedTasks 标志
-                  fetchTasksFromServer(userId, true)
+                  fetchTaskList({ force: true })
                 }
               }}
               disabled={isTasksLoading || disabled}

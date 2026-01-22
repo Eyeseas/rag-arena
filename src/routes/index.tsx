@@ -1,6 +1,6 @@
 // Arena Page - RAG 问答竞技场首页
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   QuestionInput,
@@ -13,28 +13,13 @@ import {
   type LayoutMode,
   type DateRange,
 } from '@/components/arena'
-import { useArenaStore } from '@/stores/arena'
-import { useArenaSession, useArenaVote } from '@/hooks'
-import { arenaApi } from '@/services/arena'
-import { message } from 'antd'
-import { useDeltaBuffer } from '@/hooks/useDeltaBuffer'
+import { useArenaSession, useArenaVote, useArenaQuestion } from '@/hooks'
 
 export const Route = createFileRoute('/')({
   component: ArenaPage,
 })
 
 function ArenaPage() {
-  const {
-    setAnswers,
-    appendAnswerDelta,
-    finalizeAnswer,
-    setAnswerError,
-    setLoading,
-    startNewSession,
-    startSessionWithQuestion,
-    setServerQuestionId,
-  } = useArenaStore()
-
   // 使用自定义 Hooks
   const {
     activeSessionId,
@@ -46,6 +31,8 @@ function ArenaPage() {
     citationsCount,
     isLoading,
   } = useArenaSession()
+
+  const { submitQuestion, resetQuestion } = useArenaQuestion()
 
   const {
     votingAnswerId,
@@ -62,77 +49,17 @@ function ArenaPage() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const [sourcesTab, setSourcesTab] = useState<string>('all')
-  const [draftQuestion, setDraftQuestion] = useState('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-
-  // 会话切换时重置状态
-  useEffect(() => {
-    setDraftQuestion('')
-  }, [activeSessionId])
-
-  // Delta 缓冲区
-  const { addDelta, flush, clear } = useDeltaBuffer((buffer) => {
-    for (const [answerId, delta] of buffer) {
-      if (delta) appendAnswerDelta(answerId, delta)
-    }
-  })
 
   // 提交问题
   const handleSubmit = async (q: string, dateRange?: DateRange) => {
-    setDraftQuestion(q)
-    await startSessionWithQuestion(q)
-    setLoading(true)
-    clear()
-
-    try {
-      setServerQuestionId(null)
-      setAnswers([])
-
-      await arenaApi.submitQuestionStream(q, dateRange, {
-        onMeta: (meta) => {
-          setServerQuestionId(meta.questionId)
-          setAnswers(
-            meta.answers.map((a) => ({
-              id: a.answerId,
-              providerId: a.providerId,
-              content: '',
-            }))
-          )
-        },
-        onDelta: (e) => {
-          addDelta(e.answerId, e.delta)
-        },
-        onAnswerDone: (e) => {
-          flush()
-          finalizeAnswer(e.answerId, {
-            content: e.content,
-            citations: e.citations,
-          })
-        },
-        onAnswerError: (e) => {
-          flush()
-          setAnswerError(e.answerId, e.message)
-        },
-        onDone: (e) => {
-          flush()
-          if (!e.ok) {
-            throw new Error(e.message || '获取回答失败，请重试')
-          }
-        },
-      })
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
-      setServerQuestionId(null)
-      setAnswers([])
-    } finally {
-      setLoading(false)
-    }
+    await submitQuestion(q, dateRange)
   }
 
   // 重新提问
   const handleReset = async () => {
     if (isLoading) return
-    await startNewSession()
+    await resetQuestion()
   }
 
   // 打开引用面板
@@ -183,8 +110,6 @@ function ArenaPage() {
                 key={activeSessionId}
                 loading={isLoading}
                 disabled={hasAnswers}
-                value={draftQuestion}
-                onChange={setDraftQuestion}
                 onSubmit={handleSubmit}
                 onReset={handleReset}
               />

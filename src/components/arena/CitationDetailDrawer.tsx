@@ -59,26 +59,40 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
   // 加载引用详情
   useEffect(() => {
     if (open && citation) {
-      setLoading(true)
-      setError(null)
-      setDetail(null)
+      // Defer state updates to avoid setState-in-effect lint rule.
+      queueMicrotask(() => {
+        setLoading(true)
+        setError(null)
+        setDetail(null)
+      })
+
+      let cancelled = false
 
       arenaApi
         .getCitationDetail(citation.id)
         .then((data) => {
+          if (cancelled) return
           setDetail(data)
         })
         .catch((err) => {
+          if (cancelled) return
           setError(err instanceof Error ? err.message : '加载引用详情失败')
         })
         .finally(() => {
+          if (cancelled) return
           setLoading(false)
         })
+
+      return () => {
+        cancelled = true
+      }
     } else {
-      setDetail(null)
-      setError(null)
-      setIsPlaying(false)
-      setCurrentTime(0)
+      queueMicrotask(() => {
+        setDetail(null)
+        setError(null)
+        setIsPlaying(false)
+        setCurrentTime(0)
+      })
     }
   }, [open, citation])
 

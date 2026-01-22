@@ -7,9 +7,13 @@
 import { useCallback } from 'react'
 import { message } from 'antd'
 import { useArenaStore } from '@/stores/arena'
-import { arenaApi } from '@/services/arena'
+import { arenaApi, maskCodeToProviderId, orderedMaskCodes } from '@/services/arena'
 import type { DateRange } from '@/types/common'
 import { useDeltaBuffer } from './useDeltaBuffer'
+
+function getUserId(): string {
+  return localStorage.getItem('userId') || 'default_user'
+}
 
 /**
  * 提问流程 Hook 返回值
@@ -50,6 +54,8 @@ export interface UseArenaQuestionReturn {
 export function useArenaQuestion(): UseArenaQuestionReturn {
   const {
     isLoading,
+    activeTaskId,
+    activeSessionId,
     setAnswers,
     appendAnswerDelta,
     finalizeAnswer,
@@ -58,6 +64,7 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
     startNewSession,
     startSessionWithQuestion,
     setServerQuestionId,
+    setSessionConversationInfo,
   } = useArenaStore()
 
   // 使用 delta 缓冲区优化性能
@@ -76,60 +83,170 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
       setLoading(true)
       clear()
 
-      try {
-        setServerQuestionId(null)
-        setAnswers([])
+      // If tasks are available, use the conversation-based streaming flow.
+      // This mirrors the previous logic that lived inside QuestionInput.
+      const shouldUseConversation = Boolean(activeTaskId)
 
-        await arenaApi.submitQuestionStream(trimmed, dateRange, {
-          onMeta: (meta) => {
-            setServerQuestionId(meta.questionId)
-            setAnswers(
-              meta.answers.map((a) => ({
-                id: a.answerId,
-                providerId: a.providerId,
-                content: '',
-              }))
-            )
-          },
-          onDelta: (e) => {
-            addDelta(e.answerId, e.delta)
-          },
-          onAnswerDone: (e) => {
-            flush()
-            finalizeAnswer(e.answerId, {
-              content: e.content,
-              citations: e.citations,
-            })
-          },
-          onAnswerError: (e) => {
-            flush()
-            setAnswerError(e.answerId, e.message)
-          },
-          onDone: (e) => {
-            flush()
-            if (!e.ok) {
-              throw new Error(e.message || '获取回答失败，请重试')
+      try {
+        if (!shouldUseConversation) {
+          // Legacy arena stream: /api/arena/ask?stream=1
+          setServerQuestionId(null)
+          setAnswers([])
+
+          await arenaApi.submitQuestionStream(trimmed, dateRange, {
+            onMeta: (meta) => {
+              setServerQuestionId(meta.questionId)
+              setAnswers(
+                meta.answers.map((a) => ({
+                  id: a.answerId,
+                  providerId: a.providerId,
+                  content: '',
+                }))
+              )
+            },
+            onDelta: (e) => {
+              addDelta(e.answerId, e.delta)
+            },
+            onAnswerDone: (e) => {
+              flush()
+              finalizeAnswer(e.answerId, {
+                content: e.content,
+                citations: e.citations,
+              })
+            },
+            onAnswerError: (e) => {
+              flush()
+              setAnswerError(e.answerId, e.message)
+            },
+            onDone: (e) => {
+              flush()
+              if (!e.ok) {
+                throw new Error(e.message || '获取回答失败，请重试')
+              }
+            },
+          })
+
+          return
+        }
+
+        // Conversation stream: /api/conv/create + /api/conv/chat (multi-model)
+        const userId = getUserId()
+
+        // Ensure we have the latest active session.
+        let sessionId = useArenaStore.getState().activeSessionId || activeSessionId
+        if (!sessionId) {
+          // startSessionWithQuestion already created a session, but keep this fallback.
+          sessionId = useArenaStore.getState().activeSessionId
+        }
+
+        let currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
+
+        if (!currentSession?.priIdMapping) {
+          const response = await arenaApi.createConversation(userId, {
+            taskId: activeTaskId,
+            messages: [],
+          })
+
+          if (!(response.code === 200 || response.code === 0)) {
+            throw new Error(response.msg || '创建会话失败，请重试')
+          }
+
+          const serverSessionId = response.data.sessionId
+          const priIdMapping = response.data.priIdMapping
+          const finalSessionId = serverSessionId || sessionId
+
+          setSessionConversationInfo({
+            localSessionId: sessionId,
+            serverSessionId: finalSessionId,
+            priIdMapping,
+          })
+
+          sessionId = finalSessionId
+          currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
+        }
+
+        const priIdMapping = currentSession?.priIdMapping
+        if (!priIdMapping) {
+          throw new Error('未找到模型映射信息，请重新创建会话')
+        }
+
+        const messages = currentSession
+          ? [
+              ...(currentSession.answers.map((a) => ({
+                role: 'assistant',
+                content: a.content,
+              })) as Array<{ role: string; content: string }>),
+              { role: 'user', content: trimmed },
+            ]
+          : [{ role: 'user', content: trimmed }]
+
+        const startTime = dateRange?.[0]?.format('YYYY-MM-DD HH:mm:ss')
+        const endTime = dateRange?.[1]?.format('YYYY-MM-DD HH:mm:ss')
+
+        const request = {
+          taskId: activeTaskId,
+          session_id: sessionId,
+          messages,
+          start_time: startTime,
+          end_time: endTime,
+        }
+
+        // Initialize answer cards (keep 4 boxes visible).
+        setServerQuestionId(null)
+        const initialAnswers = orderedMaskCodes
+          .filter((maskCode) => priIdMapping[maskCode])
+          .map((maskCode) => {
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            return {
+              id: providerId,
+              providerId,
+              content: '',
             }
+          })
+        setAnswers(initialAnswers)
+
+        await arenaApi.chatConversationMultiModel(userId, request, priIdMapping, {
+          onDelta: (maskCode, content) => {
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            addDelta(providerId, content)
+          },
+          onDone: (maskCode, citations) => {
+            flush()
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            finalizeAnswer(providerId, { citations })
+          },
+          onError: (maskCode, error) => {
+            flush()
+            message.error(`模型 ${maskCode} 获取回答失败: ${error.message}`)
+            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
+            setAnswerError(providerId, error.message)
           },
         })
       } catch (error) {
         message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
         setServerQuestionId(null)
-        setAnswers([])
+
+        // Legacy path cleared answer cards; conversation path kept them.
+        if (!shouldUseConversation) {
+          setAnswers([])
+        }
       } finally {
         setLoading(false)
       }
     },
     [
+      activeTaskId,
+      activeSessionId,
+      addDelta,
       startSessionWithQuestion,
       setLoading,
       setServerQuestionId,
       setAnswers,
-      addDelta,
       flush,
       clear,
       finalizeAnswer,
       setAnswerError,
+      setSessionConversationInfo,
     ]
   )
 

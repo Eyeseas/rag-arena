@@ -12,9 +12,6 @@ import {
 } from '@ant-design/icons'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
-import { useArenaStore } from '@/stores/arena'
-import { arenaApi } from '@/services/arena'
-import { message } from 'antd'
 import type { DateRange } from '@/types/common'
 
 const { RangePicker } = DatePicker
@@ -55,199 +52,16 @@ export function QuestionInput({
     dayjs().subtract(7, 'day'),
     dayjs(),
   ])
-  const [isStreaming, setIsStreaming] = useState(false)
   const senderRef = useRef<SenderRef>(null)
-
-  // 从 store 获取状态和操作
-  const {
-    activeTaskId,
-    activeSessionId,
-    startSessionWithQuestion,
-    setLoading,
-    setAnswers,
-    appendAnswerDelta,
-    finalizeAnswer,
-    setAnswerError,
-    setServerQuestionId,
-  } = useArenaStore()
 
   const mergedValue = value ?? innerValue
   const setMergedValue = onChange ?? setInnerValue
-
-  // 获取 userId
-  const getUserId = () => {
-    const storedUserId = localStorage.getItem('userId')
-    return storedUserId || 'default_user'
-  }
 
   const handleSubmit = async (content: string) => {
     const trimmed = content.trim()
     if (!trimmed) return
 
-    // 如果没有 taskId，先调用 onSubmit（保持向后兼容）
-    if (!activeTaskId) {
-      onSubmit(trimmed, dateRange)
-      return
-    }
-
-    // 使用流式接口
-    setIsStreaming(true)
-    setLoading(true)
-
-    try {
-      // 创建或获取会话
-      let sessionId = activeSessionId
-      if (!sessionId) {
-        sessionId = await startSessionWithQuestion(trimmed)
-      }
-
-      // 获取当前会话
-      let currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
-      
-      // 如果会话没有priIdMapping，先调用创建对话接口
-      if (!currentSession?.priIdMapping) {
-        try {
-          const response = await arenaApi.createConversation(getUserId(), {
-            taskId: activeTaskId,
-            messages: [],
-          })
-
-          let serverSessionId = ''
-          let priIdMapping: Record<string, string> | undefined
-          if (response.code === 200 || response.code === 0) {
-            serverSessionId = response.data.sessionId
-            priIdMapping = response.data.priIdMapping
-          } else {
-            message.error('创建会话失败，请重试')
-            return
-          }
-
-          // 更新会话，保存priIdMapping和serverSessionId
-          const finalSessionId = serverSessionId || sessionId
-          
-          // 更新会话的priIdMapping和sessionId
-          useArenaStore.setState((state) => ({
-            sessions: state.sessions.map((s) => 
-              s.id === sessionId 
-                ? { 
-                    ...s, 
-                    id: finalSessionId, // 使用服务器返回的sessionId
-                    priIdMapping,
-                    serverQuestionId: null,
-                    answers: [],
-                    votedAnswerId: null,
-                  }
-                : s
-            ),
-            activeSessionId: finalSessionId,
-          }))
-
-          // 更新当前会话引用和sessionId
-          sessionId = finalSessionId
-          currentSession = useArenaStore.getState().sessions.find((s) => s.id === sessionId)
-        } catch (error) {
-          message.error(error instanceof Error ? error.message : '创建会话失败，请重试')
-          return
-        }
-      }
-
-      // 获取当前会话的priIdMapping
-      const priIdMapping = currentSession?.priIdMapping
-
-      if (!priIdMapping) {
-        message.error('未找到模型映射信息，请重新创建会话')
-        return
-      }
-
-      // 获取当前会话的消息历史
-      const messages = currentSession
-        ? [
-            ...(currentSession.answers.map((a) => ({
-              role: 'assistant',
-              content: a.content,
-            })) as Array<{ role: string; content: string }>),
-            { role: 'user', content: trimmed },
-          ]
-        : [{ role: 'user', content: trimmed }]
-
-      // 格式化时间范围
-      const startTime = dateRange?.[0]?.format('YYYY-MM-DD HH:mm:ss')
-      const endTime = dateRange?.[1]?.format('YYYY-MM-DD HH:mm:ss')
-
-      // 准备请求参数
-      const request = {
-        taskId: activeTaskId,
-        session_id: sessionId,
-        messages,
-        start_time: startTime,
-        end_time: endTime,
-      }
-
-      // 初始化答案 - 预先创建4个模型框，确保它们一直存在
-      setServerQuestionId(null)
-      
-      // 将 maskCode 映射到 providerId (ALPHA->A, BRAVO->B, CHARLIE->C, DELTA->D)
-      const maskCodeToProviderId: Record<string, string> = {
-        ALPHA: 'A',
-        BRAVO: 'B',
-        CHARLIE: 'C',
-        DELTA: 'D',
-      }
-      
-      // 定义模型顺序：A、B、C、D
-      const orderedMaskCodes = ['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA']
-      
-      // 根据priIdMapping创建answer框（按A、B、C、D顺序）
-      const initialAnswers = orderedMaskCodes
-        .filter((maskCode) => priIdMapping[maskCode]) // 只创建存在的模型
-        .map((maskCode) => {
-          const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-          return {
-            id: providerId, // 使用providerId作为id
-            providerId,
-            content: '',
-          }
-        })
-      setAnswers(initialAnswers)
-
-      // 调用多模型流式接口 - 按顺序发送4个SSE请求（A、B、C、D）
-      await arenaApi.chatConversationMultiModel(
-        getUserId(),
-        request,
-        priIdMapping,
-        {
-          onDelta: (maskCode, content) => {
-            // 根据 maskCode 映射到 providerId
-            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-            const answerId = providerId
-            
-            // 立即追加内容到对应的answer框 - 确保实时显示
-            appendAnswerDelta(answerId, content)
-          },
-          onDone: (maskCode, citations) => {
-            // 根据 maskCode 找到对应的 providerId，然后更新对应的 answer
-            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-            finalizeAnswer(providerId, {
-              citations,
-            })
-          },
-          onError: (maskCode, error) => {
-            message.error(`模型 ${maskCode} 获取回答失败: ${error.message}`)
-            // 为对应的模型设置错误
-            const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-            setAnswerError(providerId, error.message)
-          },
-        }
-      )
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
-      setServerQuestionId(null)
-      // 保持4个模型框存在，不清空
-      // setAnswers([]) // 注释掉，保持4个框显示
-    } finally {
-      setIsStreaming(false)
-      setLoading(false)
-    }
+    onSubmit(trimmed, dateRange)
   }
 
   const handleReset = () => {
@@ -338,7 +152,7 @@ export function QuestionInput({
             onChange={setMergedValue}
             onSubmit={handleSubmit}
             onCancel={() => setMergedValue('')}
-            loading={loading || isStreaming}
+             loading={loading}
             placeholder="输入您想问的问题，让多个 AI 模型为您解答..."
             autoSize={{ minRows: 3, maxRows: 8 }}
             header={headerNode}

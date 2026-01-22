@@ -32,13 +32,8 @@ const RATING_ITEMS: Array<{ key: keyof RatingData; label: string }> = [
   { key: 'intelligentProcessing', label: '智能化处理' },
 ]
 
-export function RatingModal({
-  open,
-  answerId: _answerId,
-  providerId,
-  onClose,
-  onSubmit,
-}: RatingModalProps) {
+export function RatingModal(props: RatingModalProps) {
+  const { open, providerId, onClose, onSubmit } = props
   const [ratings, setRatings] = useState<Partial<RatingData>>({})
   const [remark, setRemark] = useState('')
   const [submitting, setSubmitting] = useState(false)
