@@ -6,6 +6,7 @@ import type { ArenaResponse } from '@/types/arena'
 import type { DateRange } from '@/types/common'
 import type { SubmitQuestionStreamHandlers } from './types'
 import { shouldUseMock } from './utils'
+import { dispatchJsonSseEvent } from './sseJson'
 import {
   MOCK_DELAY,
   delay,
@@ -159,29 +160,15 @@ export async function submitQuestionStream(
     // 使用 SSE 工具解析流式响应
     const { readSseStream } = await import('@/lib/sse')
     await readSseStream(response, (msg) => {
-      try {
-        const data = JSON.parse(msg.data)
-
-        switch (msg.event) {
-          case 'meta':
-            handlers.onMeta(data)
-            break
-          case 'answer.delta':
-            handlers.onDelta(data)
-            break
-          case 'answer.done':
-            handlers.onAnswerDone(data)
-            break
-          case 'answer.error':
-            handlers.onAnswerError(data)
-            break
-          case 'done':
-            handlers.onDone(data)
-            break
-        }
-      } catch (error) {
-        console.error('[ArenaApi] Failed to parse SSE event:', error)
-      }
+      dispatchJsonSseEvent(msg, {
+        meta: (data) => handlers.onMeta(data as Parameters<typeof handlers.onMeta>[0]),
+        'answer.delta': (data) => handlers.onDelta(data as Parameters<typeof handlers.onDelta>[0]),
+        'answer.done': (data) =>
+          handlers.onAnswerDone(data as Parameters<typeof handlers.onAnswerDone>[0]),
+        'answer.error': (data) =>
+          handlers.onAnswerError(data as Parameters<typeof handlers.onAnswerError>[0]),
+        done: (data) => handlers.onDone(data as Parameters<typeof handlers.onDone>[0]),
+      })
     })
   } catch (error) {
     console.error('[ArenaApi] submitQuestionStream failed:', error)

@@ -1,6 +1,5 @@
 // Arena Page - RAG 问答竞技场首页
 
-import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   QuestionInput,
@@ -10,10 +9,9 @@ import {
   ArenaAnswerSection,
   ArenaMobileDrawer,
   ArenaSourcesDrawer,
-  type LayoutMode,
   type DateRange,
 } from '@/components/arena'
-import { useArenaSession, useArenaVote, useArenaQuestion } from '@/hooks'
+import { useArenaSession, useArenaVote, useArenaQuestion, useArenaUI } from '@/hooks'
 
 export const Route = createFileRoute('/')({
   component: ArenaPage,
@@ -44,12 +42,21 @@ function ArenaPage() {
     closeRatingModal,
   } = useArenaVote()
 
-  // 本地 UI 状态
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('two-col')
-  const [historyOpen, setHistoryOpen] = useState(false)
-  const [sourcesOpen, setSourcesOpen] = useState(false)
-  const [sourcesTab, setSourcesTab] = useState<string>('all')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // 页面 UI 状态（与业务数据解耦）
+  const {
+    layoutMode,
+    setLayoutMode,
+    historyOpen,
+    openHistory,
+    closeHistory,
+    sourcesOpen,
+    sourcesTab,
+    setSourcesTab,
+    openSources,
+    closeSources,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+  } = useArenaUI()
 
   // 提交问题
   const handleSubmit = async (q: string, dateRange?: DateRange) => {
@@ -60,12 +67,6 @@ function ArenaPage() {
   const handleReset = async () => {
     if (isLoading) return
     await resetQuestion()
-  }
-
-  // 打开引用面板
-  const handleOpenSources = () => {
-    setSourcesTab('all')
-    setSourcesOpen(true)
   }
 
   return (
@@ -101,7 +102,7 @@ function ArenaPage() {
             <ArenaHeader
               isActive={isActive}
               isLoading={isLoading}
-              onOpenHistory={() => setHistoryOpen(true)}
+              onOpenHistory={openHistory}
             />
 
             {/* 问题输入区域 */}
@@ -130,7 +131,7 @@ function ArenaPage() {
             layoutMode={layoutMode}
             onLayoutModeChange={setLayoutMode}
             onVote={handleVote}
-            onOpenSources={handleOpenSources}
+            onOpenSources={() => openSources('all')}
           />
         )}
       </div>
@@ -138,14 +139,14 @@ function ArenaPage() {
       {/* 移动端抽屉侧边栏 */}
       <ArenaMobileDrawer
         open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
+        onClose={closeHistory}
         isLoading={isLoading}
       />
 
       {/* 引用来源面板 */}
       <ArenaSourcesDrawer
         open={sourcesOpen}
-        onClose={() => setSourcesOpen(false)}
+        onClose={closeSources}
         answers={answers}
         citationsCount={citationsCount}
         activeTab={sourcesTab}

@@ -8,3 +8,4 @@ export { useArenaQuestion, type UseArenaQuestionReturn } from './useArenaQuestio
 export { useArenaVote, type UseArenaVoteReturn } from './useArenaVote'
 export { useDeltaBuffer, type UseDeltaBufferReturn } from './useDeltaBuffer'
 export { useArenaTaskListSync, type UseArenaTaskListSyncReturn } from './useArenaTaskListSync'
+export { useArenaUI, type UseArenaUIReturn } from './useArenaUI'
