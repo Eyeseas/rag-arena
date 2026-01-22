@@ -30,3 +30,4 @@ dist-ssr
 .shared/
 .cursor/
 .claude/
+.ace-tool/
