@@ -1,6 +1,8 @@
 // Arena 组件导出
 
-export { QuestionInput, type DateRange } from './QuestionInput'
+export { QuestionInput } from './QuestionInput'
+// DateRange 类型从 types/common 重新导出，保持向后兼容
+export type { DateRange } from '@/types/common'
 export { AnswerCard } from './AnswerCard'
 export { AnswerGrid, AnswerGridSkeleton } from './AnswerGrid'
 export { LayoutSwitcher, type LayoutMode } from './LayoutSwitcher'
@@ -10,3 +12,9 @@ export { TaskSidebar } from './TaskSidebar'
 export { CitationSourcesPanel } from './CitationSourcesPanel'
 export { HoldToConfirmButton } from './HoldToConfirmButton'
 export { RatingModal } from './RatingModal'
+
+// Arena 页面子组件
+export { ArenaHeader } from './ArenaHeader'
+export { ArenaAnswerSection } from './ArenaAnswerSection'
+export { ArenaMobileDrawer } from './ArenaMobileDrawer'
+export { ArenaSourcesDrawer } from './ArenaSourcesDrawer'

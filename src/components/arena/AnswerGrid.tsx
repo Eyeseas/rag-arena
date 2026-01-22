@@ -1,6 +1,6 @@
 // AnswerGrid - 回答网格布局组件
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Row, Col, Tabs, Tag, Skeleton, Card } from 'antd'
 import { RobotOutlined } from '@ant-design/icons'
 import { AnswerCard } from './AnswerCard'
@@ -44,7 +44,7 @@ function getColSpan(mode: LayoutMode) {
   }
 }
 
-export function AnswerGrid({
+export const AnswerGrid = memo(function AnswerGrid({
   answers,
   votedAnswerId,
   votingAnswerId,
@@ -123,7 +123,7 @@ export function AnswerGrid({
       </Row>
     </div>
   )
-}
+})
 
 interface AnswerGridSkeletonProps {
   /** 是否显示 */

@@ -1,7 +1,7 @@
 // CitationDetailDrawer - 引用详情抽屉组件
 
 import { useState, useEffect, useRef } from 'react'
-import { Drawer, Spin, Empty, Tag, Typography, Divider, Alert, Button, Select, Tooltip } from 'antd'
+import { Drawer, Spin, Empty, Tag, Typography, Alert, Button, Select, Tooltip } from 'antd'
 import {
   FileTextOutlined,
   UserOutlined,
@@ -10,7 +10,6 @@ import {
   BulbOutlined,
   ClockCircleOutlined,
   PhoneOutlined,
-  ArrowRightOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
   StepBackwardOutlined,
@@ -139,7 +138,7 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
   }
 
   // 生成模拟波形数据（0轴在中间，正负振幅，确保对称）
-  const generateWaveform = (duration: number) => {
+  const generateWaveform = () => {
     const points = 200
     return Array.from({ length: points }, () => {
       // 生成 -1 到 1 之间的值，模拟音频振幅
@@ -150,7 +149,7 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
     })
   }
 
-  const waveformData = totalDuration > 0 ? generateWaveform(totalDuration) : []
+  const waveformData = totalDuration > 0 ? generateWaveform() : []
 
   return (
     <Drawer
@@ -373,7 +372,7 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
               <div className="flex-1 overflow-y-auto pr-2">
                 {contentItems.length > 0 ? (
                   <div className="space-y-3">
-                    {contentItems.map((item: any, index: number) => {
+                    {contentItems.map((item: { role?: string; callnumber?: string; caller?: string; caller_number?: string; callednumber?: string; called?: string; called_number?: string; text?: string; content?: string; speech?: string; time?: number }, index: number) => {
                       // 解析对话内容：支持 role 字段或根据 callnumber/callednumber 判断
                       let role = item.role
                       if (!role) {
@@ -388,7 +387,8 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
                         }
                       }
                       const isCaller = role === 'caller' || role === '主' || role === 'caller_number'
-                      const text = item.text || item.content || item.speech || item
+                      const textContent = item.text || item.content || item.speech
+                      const text = typeof textContent === 'string' ? textContent : String(textContent || '')
 
                       return (
                         <div
@@ -435,7 +435,7 @@ export function CitationDetailDrawer({ open, citation, onClose }: CitationDetail
                     })}
                   </div>
                 ) : (
-                  <Empty description="暂无对话内容" size="small" />
+                  <Empty description="暂无对话内容" />
                 )}
               </div>
             </div>

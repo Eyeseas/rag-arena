@@ -1,3 +1,6 @@
+// 导出通用类型
+export * from './common'
+
 // 通用响应类型
 export interface ApiResponse<T = unknown> {
   code: number

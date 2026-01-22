@@ -1,32 +1,23 @@
-// QuestionInput - 问题输入组件 (使用 @ant-design/x Sender + Prompts)
+// QuestionInput - 问题输入组件 (使用 @ant-design/x Sender)
 
 import { useState, useRef } from 'react'
-import { Sender, Prompts, type PromptsItemType } from '@ant-design/x'
+import { Sender } from '@ant-design/x'
 import type { SenderRef } from '@ant-design/x/es/sender'
-import { Button, DatePicker, Tooltip, Collapse } from 'antd'
+import { Button, DatePicker, Tooltip } from 'antd'
 import {
   PlusOutlined,
   CalendarOutlined,
   SendOutlined,
   CloseCircleOutlined,
-  BulbOutlined,
-  FileSearchOutlined,
-  SafetyCertificateOutlined,
-  BarChartOutlined,
-  CheckSquareOutlined,
-  FileTextOutlined,
-  DownOutlined,
 } from '@ant-design/icons'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
-import { ARENA_PROMPT_TEMPLATES, getPromptTextByKey } from '@/lib/prompts'
 import { useArenaStore } from '@/stores/arena'
 import { arenaApi } from '@/services/arena'
 import { message } from 'antd'
+import type { DateRange } from '@/types/common'
 
 const { RangePicker } = DatePicker
-
-export type DateRange = [Dayjs | null, Dayjs | null] | null
 
 interface QuestionInputProps {
   /** 是否加载中 */
@@ -51,40 +42,6 @@ const getPresets = () => [
   { label: '最近1年', value: [dayjs().subtract(1, 'year'), dayjs()] as [Dayjs, Dayjs] },
 ]
 
-// Prompt 图标映射
-const iconByKey: Record<string, React.ReactNode> = {
-  'rag.citations.extract': <FileSearchOutlined className="text-sky-500" />,
-  'rag.citations.verify': <SafetyCertificateOutlined className="text-emerald-500" />,
-  'rag.compare.4models': <BarChartOutlined className="text-teal-500" />,
-  'rag.summarize.actionable': <CheckSquareOutlined className="text-amber-500" />,
-  'rag.write.dashboard_spec': <FileTextOutlined className="text-rose-500" />,
-}
-
-// 构建 Prompts 数据
-function buildPromptItems(): PromptsItemType[] {
-  const grouped = new Map<string, PromptsItemType>()
-
-  for (const prompt of ARENA_PROMPT_TEMPLATES) {
-    const groupKey = `group:${prompt.group}`
-    if (!grouped.has(groupKey)) {
-      grouped.set(groupKey, {
-        key: groupKey,
-        label: prompt.group,
-        children: [],
-      })
-    }
-
-    grouped.get(groupKey)!.children!.push({
-      key: prompt.key,
-      label: prompt.title,
-      description: prompt.description,
-      icon: iconByKey[prompt.key] || <BulbOutlined className="text-slate-500" />,
-    })
-  }
-
-  return Array.from(grouped.values())
-}
-
 export function QuestionInput({
   loading = false,
   disabled = false,
@@ -98,7 +55,6 @@ export function QuestionInput({
     dayjs().subtract(7, 'day'),
     dayjs(),
   ])
-  const [promptsExpanded, setPromptsExpanded] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const senderRef = useRef<SenderRef>(null)
 
@@ -117,8 +73,6 @@ export function QuestionInput({
 
   const mergedValue = value ?? innerValue
   const setMergedValue = onChange ?? setInnerValue
-
-  const promptItems = buildPromptItems()
 
   // 获取 userId
   const getUserId = () => {
@@ -306,20 +260,6 @@ export function QuestionInput({
     setDateRange(dates)
   }
 
-  const handlePromptClick = (info: { data: PromptsItemType }) => {
-    const text = getPromptTextByKey(info.data.key as string)
-    if (!text) return
-
-    // 将 prompt 文本填入输入框
-    setMergedValue(text)
-    setPromptsExpanded(false)
-
-    // 聚焦到输入框
-    setTimeout(() => {
-      senderRef.current?.focus({ cursor: 'end' })
-    }, 100)
-  }
-
   // 已有回答时，显示重新提问按钮
   if (disabled) {
     return (
@@ -403,7 +343,8 @@ export function QuestionInput({
             autoSize={{ minRows: 3, maxRows: 8 }}
             header={headerNode}
             className="!border-0 !rounded-none !bg-transparent [&_.ant-sender-content]:!bg-transparent [&_.ant-sender-header]:!border-0"
-            actions={(_, { SendButton, LoadingButton }) => {
+            // @ts-expect-error actions prop exists at runtime but missing from types
+            actions={(_: unknown, { SendButton, LoadingButton }: { SendButton: React.ComponentType<{ icon?: React.ReactNode; className?: string }>; LoadingButton: React.ComponentType<{ className?: string }> }) => {
               if (loading) {
                 return (
                   <div className="flex items-center gap-2">

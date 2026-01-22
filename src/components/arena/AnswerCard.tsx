@@ -1,6 +1,6 @@
 // AnswerCard - 单个回答卡片组件
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { Card, Tag, Alert, Tooltip, Modal, Input, Button, Spin } from 'antd'
 import {
   FileTextOutlined,
@@ -80,7 +80,7 @@ const defaultConfig = {
   lightBg: 'bg-slate-50',
 }
 
-export function AnswerCard({
+export const AnswerCard = memo(function AnswerCard({
   answer,
   isVoted,
   disabled,
@@ -486,4 +486,4 @@ export function AnswerCard({
       />
     </Card>
   )
-}
+})

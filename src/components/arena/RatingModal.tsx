@@ -34,7 +34,7 @@ const RATING_ITEMS: Array<{ key: keyof RatingData; label: string }> = [
 
 export function RatingModal({
   open,
-  answerId,
+  answerId: _answerId,
   providerId,
   onClose,
   onSubmit,

@@ -1,0 +1,141 @@
+/**
+ * Arena 投票与评分服务
+ */
+
+import type {
+  VoteRequest,
+  VoteResponse,
+  StatsResponse,
+  SubmitRatingRequest,
+  SubmitRatingResponse,
+} from '@/types/arena'
+import { shouldUseMock } from './utils'
+import {
+  MOCK_DELAY,
+  delay,
+  generateMockVoteResponse,
+  generateMockStatsResponse,
+} from '@/data/mock'
+import { get, post } from '@/lib/request'
+
+/**
+ * 提交投票
+ *
+ * @param request 投票请求
+ * @returns 投票响应
+ *
+ * @example
+ * ```ts
+ * const response = await submitVote({
+ *   questionId: 'q_123',
+ *   answerId: 'q_123_a',
+ * })
+ * console.log(response.success) // true
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * POST /api/arena/vote
+ * Body: { questionId: string, answerId: string }
+ */
+export async function submitVote(request: VoteRequest): Promise<VoteResponse> {
+  // 如果使用 mock 模式，返回 mock 数据
+  if (shouldUseMock()) {
+    await delay(MOCK_DELAY.vote)
+    console.log('[Mock] Vote submitted:', request)
+    return generateMockVoteResponse()
+  }
+
+  // 真实接口调用
+  try {
+    const response = await post<VoteResponse>('/api/arena/vote', request)
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] submitVote failed:', error)
+    throw error
+  }
+}
+
+/**
+ * 提交评分
+ *
+ * @param request 评分请求
+ * @returns 评分响应
+ *
+ * @example
+ * ```ts
+ * const response = await submitRating({
+ *   questionId: 'q_123',
+ *   answerId: 'q_123_a',
+ *   rating: {
+ *     timeCost: 5,
+ *     thinkingContent: 4,
+ *     answerAccuracy: 5,
+ *     thinkingSensitivity: 4,
+ *     citationSummary: 5,
+ *     tagAccuracy: 4,
+ *     intelligentProcessing: 5,
+ *     remark: '回答很好'
+ *   }
+ * })
+ * console.log(response.success) // true
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * POST /api/arena/rating
+ * Body: SubmitRatingRequest
+ */
+export async function submitRating(
+  request: SubmitRatingRequest
+): Promise<SubmitRatingResponse> {
+  // 如果使用 mock 模式，返回 mock 数据
+  if (shouldUseMock()) {
+    await delay(MOCK_DELAY.vote)
+    console.log('[Mock] Rating submitted:', request)
+    return {
+      success: true,
+    }
+  }
+
+  // 真实接口调用
+  try {
+    const response = await post<SubmitRatingResponse>('/api/arena/rating', request)
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] submitRating failed:', error)
+    throw error
+  }
+}
+
+/**
+ * 获取投票统计数据
+ *
+ * @returns 统计数据响应
+ *
+ * @example
+ * ```ts
+ * const stats = await getStats()
+ * console.log(stats.openai) // 投票数
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * GET /api/arena/stats
+ */
+export async function getStats(): Promise<StatsResponse> {
+  // 如果使用 mock 模式，返回 mock 数据
+  if (shouldUseMock()) {
+    await delay(MOCK_DELAY.stats)
+    return generateMockStatsResponse()
+  }
+
+  // 真实接口调用
+  try {
+    const response = await get<StatsResponse>('/api/arena/stats')
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] getStats failed:', error)
+    throw error
+  }
+}
