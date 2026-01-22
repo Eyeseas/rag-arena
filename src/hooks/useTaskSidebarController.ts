@@ -12,17 +12,13 @@ import { useArenaStore } from '@/stores/arena'
 import { selectTasksSorted, selectTaskSessionsSorted } from '@/stores/arenaSelectors'
 import { arenaApi } from '@/services/arena'
 import { useArenaTaskListSync } from '@/hooks'
+import { getUserId } from '@/lib/userId'
 
 export interface UseTaskSidebarControllerParams {
   disabled: boolean
   collapsed: boolean
   onAfterSelect?: () => void
   onCollapsedChange?: (collapsed: boolean) => void
-}
-
-function getUserId(): string {
-  const storedUserId = localStorage.getItem('userId')
-  return storedUserId || 'default_user'
 }
 
 export function useTaskSidebarController({

@@ -8,7 +8,8 @@ import {
   FolderOutlined,
 } from '@ant-design/icons'
 
-export type LayoutMode = 'four-col' | 'two-col' | 'one-col' | 'tabs'
+import type { LayoutMode } from '@/types/arenaUi'
+export type { LayoutMode } from '@/types/arenaUi'
 
 interface LayoutSwitcherProps {
   value: LayoutMode

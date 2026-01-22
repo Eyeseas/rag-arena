@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react'
 import { message } from 'antd'
 import { useArenaStore } from '@/stores/arena'
+import { selectAnswerById } from '@/stores/arenaSelectors'
 import { arenaApi } from '@/services/arena'
 import type { RatingData } from '@/types/arena'
 import { useArenaSession } from './useArenaSession'
@@ -96,7 +97,7 @@ export function useArenaVote(): UseArenaVoteReturn {
         message.success('投票成功！')
 
         // 找到对应的回答，获取 providerId
-        const answer = answers.find((a) => a.id === answerId)
+        const answer = selectAnswerById(answers, answerId)
         if (answer) {
           setRatingAnswerId(answerId)
           setRatingProviderId(answer.providerId)

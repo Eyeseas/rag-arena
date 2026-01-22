@@ -7,6 +7,7 @@
 import { useCallback } from 'react'
 import { message } from 'antd'
 import { useArenaStore } from '@/stores/arena'
+import { selectSessionById } from '@/stores/arenaSelectors'
 import type { DateRange } from '@/types/common'
 import { useDeltaBuffer } from './useDeltaBuffer'
 
@@ -107,7 +108,7 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
           userId: getUserId(),
           activeTaskId,
           activeSessionId: sessionId,
-          getSessionById: (id) => useArenaStore.getState().sessions.find((s) => s.id === id),
+          getSessionById: (id) => selectSessionById(useArenaStore.getState(), id) || undefined,
           setSessionConversationInfo,
           setServerQuestionId,
           setAnswers,

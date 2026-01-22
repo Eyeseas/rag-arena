@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-}
+import type { FollowUpChatMessage } from '@/types/arenaUi'
 
 export interface UseAnswerFollowUpChatReturn {
-  chatMessages: ChatMessage[]
+  chatMessages: FollowUpChatMessage[]
   chatInput: string
   setChatInput: (value: string) => void
   chatLoading: boolean
@@ -19,7 +14,7 @@ export interface UseAnswerFollowUpChatReturn {
 
 // 每个答案支持一次追问；目前为前端演示用的模拟对话逻辑。
 export function useAnswerFollowUpChat(providerId: string): UseAnswerFollowUpChatReturn {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatMessages, setChatMessages] = useState<FollowUpChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [hasAskedFollowUp, setHasAskedFollowUp] = useState(false)
@@ -38,7 +33,7 @@ export function useAnswerFollowUpChat(providerId: string): UseAnswerFollowUpChat
     if (!chatInput.trim() || chatLoading || hasAskedFollowUp) return
 
     const content = chatInput.trim()
-    const userMessage: ChatMessage = {
+    const userMessage: FollowUpChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
       content,
@@ -51,7 +46,7 @@ export function useAnswerFollowUpChat(providerId: string): UseAnswerFollowUpChat
 
     // 模拟 AI 回复（实际应用中需要调用 API）
     timerRef.current = window.setTimeout(() => {
-      const assistantMessage: ChatMessage = {
+      const assistantMessage: FollowUpChatMessage = {
         id: `assistant_${Date.now()}`,
         role: 'assistant',
         content: `这是模型 ${providerId} 对您追问「${content}」的回复。\n\n在实际应用中，这里会调用后端 API 获取该模型的真实回复。目前为演示效果。`,

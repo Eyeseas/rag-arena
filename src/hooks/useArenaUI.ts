@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import type { LayoutMode } from '@/components/arena'
+import type { ArenaSourcesTabKey, LayoutMode } from '@/types/arenaUi'
 
 export interface UseArenaUIReturn {
   layoutMode: LayoutMode
@@ -11,9 +11,9 @@ export interface UseArenaUIReturn {
   closeHistory: () => void
 
   sourcesOpen: boolean
-  sourcesTab: string
-  setSourcesTab: (tab: string) => void
-  openSources: (tab?: string) => void
+  sourcesTab: ArenaSourcesTabKey
+  setSourcesTab: (tab: ArenaSourcesTabKey) => void
+  openSources: (tab?: ArenaSourcesTabKey) => void
   closeSources: () => void
 
   sidebarCollapsed: boolean
@@ -25,13 +25,13 @@ export function useArenaUI(): UseArenaUIReturn {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('two-col')
   const [historyOpen, setHistoryOpen] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)
-  const [sourcesTab, setSourcesTab] = useState<string>('all')
+  const [sourcesTab, setSourcesTab] = useState<ArenaSourcesTabKey>('all')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const openHistory = useCallback(() => setHistoryOpen(true), [])
   const closeHistory = useCallback(() => setHistoryOpen(false), [])
 
-  const openSources = useCallback((tab: string = 'all') => {
+  const openSources = useCallback((tab: ArenaSourcesTabKey = 'all') => {
     setSourcesTab(tab)
     setSourcesOpen(true)
   }, [])

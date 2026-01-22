@@ -7,6 +7,7 @@ import { FileTextOutlined } from '@ant-design/icons'
 import { CitationSourcesPanel } from '@/components/arena'
 import { buildSourcesItemsFromAnswers } from '@/lib/citationSources'
 import type { Answer } from '@/types/arena'
+import type { ArenaSourcesTabKey } from '@/types/arenaUi'
 
 interface ArenaSourcesDrawerProps {
   /** 是否打开 */
@@ -18,9 +19,9 @@ interface ArenaSourcesDrawerProps {
   /** 引用总数 */
   citationsCount: number
   /** 当前选中的 Tab */
-  activeTab: string
+  activeTab: ArenaSourcesTabKey
   /** Tab 变更回调 */
-  onTabChange: (tab: string) => void
+  onTabChange: (tab: ArenaSourcesTabKey) => void
 }
 
 /**

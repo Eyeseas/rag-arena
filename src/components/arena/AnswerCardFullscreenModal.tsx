@@ -4,7 +4,7 @@ import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
 
 import type { Answer, Citation } from '@/types/arena'
-import type { ChatMessage } from '@/hooks/useAnswerFollowUpChat'
+import type { FollowUpChatMessage } from '@/types/arenaUi'
 
 import type { ProviderVisualConfig } from './AnswerCardProviderConfig'
 import { CitationCard } from './CitationCard'
@@ -15,7 +15,7 @@ interface AnswerCardFullscreenModalProps {
   answer: Answer
   config: ProviderVisualConfig
 
-  chatMessages: ChatMessage[]
+  chatMessages: FollowUpChatMessage[]
   chatInput: string
   setChatInput: (value: string) => void
   chatLoading: boolean
