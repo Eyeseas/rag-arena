@@ -1,7 +1,7 @@
 /**
- * useArenaVote - 投票与评分流程 Hook
+ * useArenaVote - 投票与反馈流程 Hook
  *
- * 封装投票、评分提交等逻辑
+ * 封装投票、反馈提交等逻辑
  */
 
 import { useState, useCallback } from 'react'
@@ -9,7 +9,7 @@ import { message } from 'antd'
 import { useArenaStore } from '@/stores/arena'
 import { selectAnswerById } from '@/stores/arenaSelectors'
 import { arenaApi } from '@/services/arena'
-import type { RatingData } from '@/types/arena'
+import type { VoteFeedbackData } from '@/types/arena'
 import { useArenaSession } from './useArenaSession'
 
 /**
@@ -18,22 +18,22 @@ import { useArenaSession } from './useArenaSession'
 export interface UseArenaVoteReturn {
   /** 正在投票的回答 ID */
   votingAnswerId: string | null
-  /** 评分弹窗是否打开 */
-  ratingModalOpen: boolean
-  /** 正在评分的回答 ID */
-  ratingAnswerId: string | null
-  /** 正在评分的供应商 ID */
-  ratingProviderId: string
+  /** 反馈弹窗是否打开 */
+  feedbackModalOpen: boolean
+  /** 正在反馈的回答 ID */
+  feedbackAnswerId: string | null
+  /** 正在反馈的供应商 ID */
+  feedbackProviderId: string
   /** 提交投票 */
   handleVote: (answerId: string) => Promise<void>
-  /** 提交评分 */
-  handleSubmitRating: (ratingData: RatingData) => Promise<void>
-  /** 关闭评分弹窗 */
-  closeRatingModal: () => void
+  /** 提交反馈 */
+  handleSubmitFeedback: (feedbackData: VoteFeedbackData) => Promise<void>
+  /** 关闭反馈弹窗 */
+  closeFeedbackModal: () => void
 }
 
 /**
- * 投票与评分流程 Hook
+ * 投票与反馈流程 Hook
  *
  * @returns 投票流程相关方法和状态
  *
@@ -42,10 +42,10 @@ export interface UseArenaVoteReturn {
  * function VoteButtons() {
  *   const {
  *     votingAnswerId,
- *     ratingModalOpen,
+ *     feedbackModalOpen,
  *     handleVote,
- *     handleSubmitRating,
- *     closeRatingModal,
+ *     handleSubmitFeedback,
+ *     closeFeedbackModal,
  *   } = useArenaVote()
  *
  *   return (
@@ -59,10 +59,10 @@ export interface UseArenaVoteReturn {
  *           投票
  *         </button>
  *       ))}
- *       <RatingModal
- *         open={ratingModalOpen}
- *         onClose={closeRatingModal}
- *         onSubmit={handleSubmitRating}
+ *       <VoteFeedbackModal
+ *         open={feedbackModalOpen}
+ *         onClose={closeFeedbackModal}
+ *         onSubmit={handleSubmitFeedback}
  *       />
  *     </>
  *   )
@@ -74,9 +74,9 @@ export function useArenaVote(): UseArenaVoteReturn {
   const { questionId, answers, votedAnswerId, isLoading } = useArenaSession()
 
   const [votingAnswerId, setVotingAnswerId] = useState<string | null>(null)
-  const [ratingModalOpen, setRatingModalOpen] = useState(false)
-  const [ratingAnswerId, setRatingAnswerId] = useState<string | null>(null)
-  const [ratingProviderId, setRatingProviderId] = useState<string>('')
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  const [feedbackAnswerId, setFeedbackAnswerId] = useState<string | null>(null)
+  const [feedbackProviderId, setFeedbackProviderId] = useState<string>('')
 
   const handleVote = useCallback(
     async (answerId: string) => {
@@ -96,12 +96,12 @@ export function useArenaVote(): UseArenaVoteReturn {
         setVotedAnswerId(answerId)
         message.success('投票成功！')
 
-        // 找到对应的回答，获取 providerId
+        // 找到对应的回答，获取 providerId，打开反馈弹窗
         const answer = selectAnswerById(answers, answerId)
         if (answer) {
-          setRatingAnswerId(answerId)
-          setRatingProviderId(answer.providerId)
-          setRatingModalOpen(true)
+          setFeedbackAnswerId(answerId)
+          setFeedbackProviderId(answer.providerId)
+          setFeedbackModalOpen(true)
         }
       } catch (error) {
         message.error(error instanceof Error ? error.message : '投票失败，请重试')
@@ -112,38 +112,41 @@ export function useArenaVote(): UseArenaVoteReturn {
     [isLoading, questionId, votedAnswerId, answers, setVotedAnswerId]
   )
 
-  const handleSubmitRating = useCallback(
-    async (ratingData: RatingData) => {
-      if (!questionId || !ratingAnswerId) return
+  const handleSubmitFeedback = useCallback(
+    async (feedbackData: VoteFeedbackData) => {
+      if (!questionId || !feedbackAnswerId) return
+
+      // 合并所有反馈原因
+      const reasons = [...feedbackData.answerIssues, ...feedbackData.citationIssues]
 
       try {
-        await arenaApi.submitRating({
+        await arenaApi.submitVoteFeedback({
           questionId,
-          answerId: ratingAnswerId,
-          rating: ratingData,
+          answerId: feedbackAnswerId,
+          reasons,
         })
-        message.success('评分提交成功！')
+        message.success('反馈提交成功！')
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '评分提交失败，请重试')
+        message.error(error instanceof Error ? error.message : '反馈提交失败，请重试')
         throw error
       }
     },
-    [questionId, ratingAnswerId]
+    [questionId, feedbackAnswerId]
   )
 
-  const closeRatingModal = useCallback(() => {
-    setRatingModalOpen(false)
-    setRatingAnswerId(null)
-    setRatingProviderId('')
+  const closeFeedbackModal = useCallback(() => {
+    setFeedbackModalOpen(false)
+    setFeedbackAnswerId(null)
+    setFeedbackProviderId('')
   }, [])
 
   return {
     votingAnswerId,
-    ratingModalOpen,
-    ratingAnswerId,
-    ratingProviderId,
+    feedbackModalOpen,
+    feedbackAnswerId,
+    feedbackProviderId,
     handleVote,
-    handleSubmitRating,
-    closeRatingModal,
+    handleSubmitFeedback,
+    closeFeedbackModal,
   }
 }

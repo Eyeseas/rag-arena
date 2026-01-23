@@ -6,8 +6,8 @@ import type {
   VoteRequest,
   VoteResponse,
   StatsResponse,
-  SubmitRatingRequest,
-  SubmitRatingResponse,
+  SubmitVoteFeedbackRequest,
+  SubmitVoteFeedbackResponse,
 } from '@/types/arena'
 import { shouldUseMock } from './utils'
 import {
@@ -57,42 +57,33 @@ export async function submitVote(request: VoteRequest): Promise<VoteResponse> {
 }
 
 /**
- * 提交评分
+ * 提交投票反馈
  *
- * @param request 评分请求
- * @returns 评分响应
+ * @param request 反馈请求
+ * @returns 反馈响应
  *
  * @example
  * ```ts
- * const response = await submitRating({
+ * const response = await submitVoteFeedback({
  *   questionId: 'q_123',
  *   answerId: 'q_123_a',
- *   rating: {
- *     timeCost: 5,
- *     thinkingContent: 4,
- *     answerAccuracy: 5,
- *     thinkingSensitivity: 4,
- *     citationSummary: 5,
- *     tagAccuracy: 4,
- *     intelligentProcessing: 5,
- *     remark: '回答很好'
- *   }
+ *   reasons: ['SLOW_RESPONSE', 'HALLUCINATION']
  * })
  * console.log(response.success) // true
  * ```
  *
  * @remarks
  * 真实接口对接时，需要调用:
- * POST /api/arena/rating
- * Body: SubmitRatingRequest
+ * POST /api/arena/vote/feedback
+ * Body: SubmitVoteFeedbackRequest
  */
-export async function submitRating(
-  request: SubmitRatingRequest
-): Promise<SubmitRatingResponse> {
+export async function submitVoteFeedback(
+  request: SubmitVoteFeedbackRequest
+): Promise<SubmitVoteFeedbackResponse> {
   // 如果使用 mock 模式，返回 mock 数据
   if (shouldUseMock()) {
     await delay(MOCK_DELAY.vote)
-    console.log('[Mock] Rating submitted:', request)
+    console.log('[Mock] Vote feedback submitted:', request)
     return {
       success: true,
     }
@@ -100,10 +91,10 @@ export async function submitRating(
 
   // 真实接口调用
   try {
-    const response = await post<SubmitRatingResponse>('/api/arena/rating', request)
+    const response = await post<SubmitVoteFeedbackResponse>('/api/arena/vote/feedback', request)
     return response
   } catch (error) {
-    console.error('[ArenaApi] submitRating failed:', error)
+    console.error('[ArenaApi] submitVoteFeedback failed:', error)
     throw error
   }
 }

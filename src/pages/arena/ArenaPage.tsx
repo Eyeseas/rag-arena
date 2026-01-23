@@ -11,8 +11,8 @@ import {
   ArenaSourcesDrawer,
 } from '@/components/arena'
 
-// 懒加载 RatingModal - 仅在投票后使用
-const RatingModal = lazy(() => import('@/components/arena/RatingModal').then(m => ({ default: m.RatingModal })))
+// 懒加载 VoteFeedbackModal - 仅在投票后使用
+const VoteFeedbackModal = lazy(() => import('@/components/arena/VoteFeedbackModal').then(m => ({ default: m.VoteFeedbackModal })))
 import { useArenaSession, useArenaVote, useArenaQuestion, useArenaUI } from '@/hooks'
 import type { DateRange } from '@/types/common'
 
@@ -33,12 +33,12 @@ export function ArenaPage() {
 
   const {
     votingAnswerId,
-    ratingModalOpen,
-    ratingAnswerId,
-    ratingProviderId,
+    feedbackModalOpen,
+    feedbackAnswerId,
+    feedbackProviderId,
     handleVote,
-    handleSubmitRating,
-    closeRatingModal,
+    handleSubmitFeedback,
+    closeFeedbackModal,
   } = useArenaVote()
 
   // 页面 UI 状态（与业务数据解耦）
@@ -144,15 +144,14 @@ export function ArenaPage() {
         onTabChange={setSourcesTab}
       />
 
-      {/* 评分弹窗 - 懒加载 */}
-      {ratingAnswerId && (
+      {/* 投票反馈弹窗 - 懒加载 */}
+      {feedbackAnswerId && (
         <Suspense fallback={<Spin />}>
-          <RatingModal
-            open={ratingModalOpen}
-            answerId={ratingAnswerId}
-            providerId={ratingProviderId}
-            onClose={closeRatingModal}
-            onSubmit={handleSubmitRating}
+          <VoteFeedbackModal
+            open={feedbackModalOpen}
+            providerId={feedbackProviderId}
+            onClose={closeFeedbackModal}
+            onSubmit={handleSubmitFeedback}
           />
         </Suspense>
       )}

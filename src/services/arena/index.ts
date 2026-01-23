@@ -25,14 +25,14 @@ export { shouldUseMock, maskCodeToProviderId, orderedMaskCodes } from './utils'
 
 // 导出各模块函数
 export { submitQuestion, submitQuestionStream } from './question'
-export { submitVote, submitRating, getStats } from './vote'
+export { submitVote, submitVoteFeedback, getStats } from './vote'
 export { getTaskList, addTask } from './task'
 export { createConversation, chatConversationMultiModel, chatConversation } from './conversation'
 export { getCitationDetail } from './citation'
 
 // 导入函数用于构建 arenaApi 对象
 import { submitQuestion, submitQuestionStream } from './question'
-import { submitVote, submitRating, getStats } from './vote'
+import { submitVote, submitVoteFeedback, getStats } from './vote'
 import { getTaskList, addTask } from './task'
 import { createConversation, chatConversationMultiModel, chatConversation } from './conversation'
 import { getCitationDetail } from './citation'
@@ -48,8 +48,8 @@ export const arenaApi = {
   submitQuestionStream,
   /** 提交投票 */
   submitVote,
-  /** 提交评分 */
-  submitRating,
+  /** 提交投票反馈 */
+  submitVoteFeedback,
   /** 获取统计数据 */
   getStats,
   /** 获取引用详情 */

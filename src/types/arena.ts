@@ -188,45 +188,44 @@ export interface VoteResponse {
 }
 
 /**
- * 评分数据
- * 用户对回答的详细评分
+ * 投票反馈原因
+ * 用于标记回答或引用的问题类型
  */
-export interface RatingData {
-  /** 耗时评分 (1-5) */
-  timeCost: number
-  /** 思考内容评分 (1-5) */
-  thinkingContent: number
-  /** 回答准确度评分 (1-5) */
-  answerAccuracy: number
-  /** 思考敏感度评分 (1-5) */
-  thinkingSensitivity: number
-  /** 引用内容摘要评分 (1-5) */
-  citationSummary: number
-  /** 标签准确度评分 (1-5) */
-  tagAccuracy: number
-  /** 智能化处理评分 (1-5) */
-  intelligentProcessing: number
-  /** 备注 */
-  remark?: string
+export type VoteFeedbackReason =
+  | 'SLOW_RESPONSE'                    // 响应速度太慢
+  | 'IRRELEVANT_DIALOGUE'              // 存在无关话单
+  | 'HALLUCINATION'                    // 存在编造内容
+  | 'CITATION_SUMMARY_INACCURATE'      // 摘要不够准确
+  | 'KEY_CONTENT_LOCATE_INACCURATE'    // 关键内容定位不够准确
+
+/**
+ * 投票反馈数据
+ * 用户对回答的问题反馈
+ */
+export interface VoteFeedbackData {
+  /** 回答质量问题 */
+  answerIssues: VoteFeedbackReason[]
+  /** 引用质量问题 */
+  citationIssues: VoteFeedbackReason[]
 }
 
 /**
- * 提交评分请求
- * 对应 API: POST /api/arena/rating
+ * 提交投票反馈请求
+ * 对应 API: POST /api/arena/vote/feedback
  */
-export interface SubmitRatingRequest {
+export interface SubmitVoteFeedbackRequest {
   /** 问题 ID */
   questionId: string
   /** 回答 ID */
   answerId: string
-  /** 评分数据 */
-  rating: RatingData
+  /** 反馈原因列表 */
+  reasons: VoteFeedbackReason[]
 }
 
 /**
- * 提交评分响应
+ * 提交投票反馈响应
  */
-export interface SubmitRatingResponse {
+export interface SubmitVoteFeedbackResponse {
   /** 是否成功 */
   success: boolean
   /** 错误信息 (可选) */

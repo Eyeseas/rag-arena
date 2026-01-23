@@ -12,6 +12,7 @@ export { CitationCard, CitationList } from './CitationCard'
 export { TaskSidebar } from './TaskSidebar'
 export { CitationSourcesPanel } from './CitationSourcesPanel'
 export { HoldToConfirmButton } from './HoldToConfirmButton'
+// VoteFeedbackModal 仅通过懒加载使用，不在此导出以保持代码分割
 
 // Arena 页面子组件
 export { ArenaHeader } from './ArenaHeader'
