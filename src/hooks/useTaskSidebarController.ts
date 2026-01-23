@@ -8,6 +8,7 @@
 import { createElement, useEffect, useMemo, useRef, useState } from 'react'
 import { Form, Modal, message } from 'antd'
 import { DeleteOutlined } from '@ant-design/icons'
+import { useShallow } from 'zustand/react/shallow'
 import { useArenaStore } from '@/stores/arena'
 import { selectTasksSorted, selectTaskSessionsSorted } from '@/stores/arenaSelectors'
 import { arenaApi } from '@/services/arena'
@@ -27,22 +28,32 @@ export function useTaskSidebarController({
   onAfterSelect,
   onCollapsedChange,
 }: UseTaskSidebarControllerParams) {
-  // 合并 Store 选择器，减少重渲染
+  // 使用 shallow 比较优化重渲染
   const {
     tasks,
     sessions,
     activeTaskId,
     activeSessionId,
-    deleteTask,
-    renameTask,
-    toggleTaskExpanded,
-    startNewSession,
-    setActiveSessionId,
-    deleteSession,
-    renameSession,
-    setActiveTaskId,
     isTasksLoading,
-  } = useArenaStore()
+  } = useArenaStore(
+    useShallow((s) => ({
+      tasks: s.tasks,
+      sessions: s.sessions,
+      activeTaskId: s.activeTaskId,
+      activeSessionId: s.activeSessionId,
+      isTasksLoading: s.isTasksLoading,
+    }))
+  )
+
+  // Actions 不需要 shallow 比较，因为它们是稳定的引用
+  const deleteTask = useArenaStore((s) => s.deleteTask)
+  const renameTask = useArenaStore((s) => s.renameTask)
+  const toggleTaskExpanded = useArenaStore((s) => s.toggleTaskExpanded)
+  const startNewSession = useArenaStore((s) => s.startNewSession)
+  const setActiveSessionId = useArenaStore((s) => s.setActiveSessionId)
+  const deleteSession = useArenaStore((s) => s.deleteSession)
+  const renameSession = useArenaStore((s) => s.renameSession)
+  const setActiveTaskId = useArenaStore((s) => s.setActiveTaskId)
 
   const { fetchTaskList } = useArenaTaskListSync()
 

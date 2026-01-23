@@ -9,11 +9,9 @@ export { LayoutSwitcher } from './LayoutSwitcher'
 // LayoutMode 类型从 types/arenaUi 重新导出，保持向后兼容
 export type { LayoutMode } from '@/types/arenaUi'
 export { CitationCard, CitationList } from './CitationCard'
-export { CitationDetailDrawer } from './CitationDetailDrawer'
 export { TaskSidebar } from './TaskSidebar'
 export { CitationSourcesPanel } from './CitationSourcesPanel'
 export { HoldToConfirmButton } from './HoldToConfirmButton'
-export { RatingModal } from './RatingModal'
 
 // Arena 页面子组件
 export { ArenaHeader } from './ArenaHeader'

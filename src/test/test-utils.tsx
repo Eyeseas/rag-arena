@@ -57,9 +57,9 @@ export function createMockSession(overrides: Partial<{
     votedAnswerId: overrides.votedAnswerId ?? null,
     createdAt: overrides.createdAt ?? now,
     updatedAt: overrides.updatedAt ?? now,
-    serverQuestionId: null,
-    serverSessionId: null,
-    priIdMapping: null,
+    serverQuestionId: null as string | null,
+    serverSessionId: null as string | null,
+    priIdMapping: undefined as Record<string, string> | undefined,
   }
 }
 

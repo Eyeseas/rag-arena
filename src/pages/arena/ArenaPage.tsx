@@ -1,14 +1,18 @@
 // ArenaPage - RAG 问答竞技场首页（提取自路由文件，避免 routes 目录承担页面实现细节）
 
+import { lazy, Suspense } from 'react'
+import { Spin } from 'antd'
 import {
   QuestionInput,
   TaskSidebar,
-  RatingModal,
   ArenaHeader,
   ArenaAnswerSection,
   ArenaMobileDrawer,
   ArenaSourcesDrawer,
 } from '@/components/arena'
+
+// 懒加载 RatingModal - 仅在投票后使用
+const RatingModal = lazy(() => import('@/components/arena/RatingModal').then(m => ({ default: m.RatingModal })))
 import { useArenaSession, useArenaVote, useArenaQuestion, useArenaUI } from '@/hooks'
 import type { DateRange } from '@/types/common'
 
@@ -140,15 +144,17 @@ export function ArenaPage() {
         onTabChange={setSourcesTab}
       />
 
-      {/* 评分弹窗 */}
+      {/* 评分弹窗 - 懒加载 */}
       {ratingAnswerId && (
-        <RatingModal
-          open={ratingModalOpen}
-          answerId={ratingAnswerId}
-          providerId={ratingProviderId}
-          onClose={closeRatingModal}
-          onSubmit={handleSubmitRating}
-        />
+        <Suspense fallback={<Spin />}>
+          <RatingModal
+            open={ratingModalOpen}
+            answerId={ratingAnswerId}
+            providerId={ratingProviderId}
+            onClose={closeRatingModal}
+            onSubmit={handleSubmitRating}
+          />
+        </Suspense>
       )}
     </div>
   )

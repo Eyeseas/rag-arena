@@ -6,6 +6,7 @@
 
 import { useCallback } from 'react'
 import { message } from 'antd'
+import { useShallow } from 'zustand/react/shallow'
 import { useArenaStore } from '@/stores/arena'
 import { selectSessionById } from '@/stores/arenaSelectors'
 import type { DateRange } from '@/types/common'
@@ -52,19 +53,22 @@ export interface UseArenaQuestionReturn {
  * ```
  */
 export function useArenaQuestion(): UseArenaQuestionReturn {
-  const {
-    isLoading,
-    activeTaskId,
-    setAnswers,
-    appendAnswerDelta,
-    finalizeAnswer,
-    setAnswerError,
-    setLoading,
-    startNewSession,
-    startSessionWithQuestion,
-    setServerQuestionId,
-    setSessionConversationInfo,
-  } = useArenaStore()
+  const { isLoading, activeTaskId } = useArenaStore(
+    useShallow((s) => ({
+      isLoading: s.isLoading,
+      activeTaskId: s.activeTaskId,
+    }))
+  )
+
+  const setAnswers = useArenaStore((s) => s.setAnswers)
+  const appendAnswerDelta = useArenaStore((s) => s.appendAnswerDelta)
+  const finalizeAnswer = useArenaStore((s) => s.finalizeAnswer)
+  const setAnswerError = useArenaStore((s) => s.setAnswerError)
+  const setLoading = useArenaStore((s) => s.setLoading)
+  const startNewSession = useArenaStore((s) => s.startNewSession)
+  const startSessionWithQuestion = useArenaStore((s) => s.startSessionWithQuestion)
+  const setServerQuestionId = useArenaStore((s) => s.setServerQuestionId)
+  const setSessionConversationInfo = useArenaStore((s) => s.setSessionConversationInfo)
 
   // 使用 delta 缓冲区优化性能
   const { addDelta, flush, clear } = useDeltaBuffer((buffer) => {

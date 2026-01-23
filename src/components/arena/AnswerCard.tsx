@@ -1,7 +1,7 @@
 // AnswerCard - 单个回答卡片组件
 
-import { useEffect, useRef, useState, memo } from 'react'
-import { Card, Tag, Alert, Tooltip, Button } from 'antd'
+import { useEffect, useRef, useState, memo, lazy, Suspense } from 'react'
+import { Card, Tag, Alert, Tooltip, Button, Spin } from 'antd'
 import {
   FileTextOutlined,
   CheckCircleFilled,
@@ -10,12 +10,13 @@ import {
 import { XMarkdown } from '@ant-design/x-markdown'
 import '@ant-design/x-markdown/themes/light.css'
 import type { Answer, Citation } from '@/types/arena'
-import { CitationDetailDrawer } from './CitationDetailDrawer'
 import { HoldToConfirmButton } from './HoldToConfirmButton'
-import { AnswerCardFullscreenModal } from './AnswerCardFullscreenModal'
 import { AnswerCardCitations } from './AnswerCardCitations'
 import { getProviderVisualConfig } from './AnswerCardProviderConfig'
 import { useAnswerFollowUpChat } from '@/hooks/useAnswerFollowUpChat'
+
+const CitationDetailDrawer = lazy(() => import('./CitationDetailDrawer').then(m => ({ default: m.CitationDetailDrawer })))
+const AnswerCardFullscreenModal = lazy(() => import('./AnswerCardFullscreenModal').then(m => ({ default: m.AnswerCardFullscreenModal })))
 
 interface AnswerCardProps {
   /** 回答数据 */
@@ -205,27 +206,30 @@ export const AnswerCard = memo(function AnswerCard({
         />
       )}
 
-      <AnswerCardFullscreenModal
-        open={fullscreenOpen}
-        onClose={handleCloseFullscreen}
-        answer={answer}
-        config={config}
-        chatMessages={chatMessages}
-        chatInput={chatInput}
-        setChatInput={setChatInput}
-        chatLoading={chatLoading}
-        hasAskedFollowUp={hasAskedFollowUp}
-        onSendMessage={handleSendMessage}
-        onKeyDown={handleKeyDown}
-        onCitationClick={handleCitationClick}
-      />
+      <Suspense fallback={<Spin size="small" />}>
+        <AnswerCardFullscreenModal
+          open={fullscreenOpen}
+          onClose={handleCloseFullscreen}
+          answer={answer}
+          config={config}
+          chatMessages={chatMessages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          chatLoading={chatLoading}
+          hasAskedFollowUp={hasAskedFollowUp}
+          onSendMessage={handleSendMessage}
+          onKeyDown={handleKeyDown}
+          onCitationClick={handleCitationClick}
+        />
+      </Suspense>
 
-      {/* 引用详情抽屉 */}
-      <CitationDetailDrawer
-        open={citationDrawerOpen}
-        citation={selectedCitation}
-        onClose={handleCloseCitationDrawer}
-      />
+      <Suspense fallback={<Spin size="small" />}>
+        <CitationDetailDrawer
+          open={citationDrawerOpen}
+          citation={selectedCitation}
+          onClose={handleCloseCitationDrawer}
+        />
+      </Suspense>
     </Card>
   )
 })

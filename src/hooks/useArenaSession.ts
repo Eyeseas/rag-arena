@@ -4,6 +4,7 @@
  * 提供当前会话的状态和常用计算属性
  */
 
+import { useShallow } from 'zustand/react/shallow'
 import { useArenaStore, type ArenaSession } from '@/stores/arena'
 import { selectActiveSession, selectCitationsCount } from '@/stores/arenaSelectors'
 
@@ -54,9 +55,13 @@ export interface UseArenaSessionReturn {
  * ```
  */
 export function useArenaSession(): UseArenaSessionReturn {
-  const isLoading = useArenaStore((s) => s.isLoading)
-  const activeSessionId = useArenaStore((s) => s.activeSessionId)
-  const activeSession = useArenaStore((s) => selectActiveSession(s))
+  const { isLoading, activeSessionId, activeSession } = useArenaStore(
+    useShallow((s) => ({
+      isLoading: s.isLoading,
+      activeSessionId: s.activeSessionId,
+      activeSession: selectActiveSession(s),
+    }))
+  )
 
   const question = activeSession?.question || ''
   const questionId = activeSession?.serverQuestionId || null
