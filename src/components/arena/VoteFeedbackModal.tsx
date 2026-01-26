@@ -89,7 +89,7 @@ export function VoteFeedbackModal(props: VoteFeedbackModalProps) {
       footer={
         <Space>
           <Button onClick={handleCancel} disabled={submitting}>
-            取消
+            没有问题，不反馈
           </Button>
           <Button
             type="primary"
