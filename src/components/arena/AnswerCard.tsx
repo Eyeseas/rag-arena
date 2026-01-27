@@ -46,7 +46,7 @@ export const AnswerCard = memo(function AnswerCard({
   onVoteHover,
 }: AnswerCardProps) {
   const config = getProviderVisualConfig(answer.providerId)
-  const [citationsExpanded, setCitationsExpanded] = useState(true)
+  const [citationsExpanded, setCitationsExpanded] = useState(false)
   const [fullscreenOpen, setFullscreenOpen] = useState(false)
   const [citationDrawerOpen, setCitationDrawerOpen] = useState(false)
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null)
