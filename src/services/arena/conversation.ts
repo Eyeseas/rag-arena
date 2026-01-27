@@ -85,12 +85,12 @@ export async function createConversation(
  *
  * @remarks
  * 真实接口对接时，需要调用:
- * POST /conv/chat (4次并行：ALPHA、BRAVO、CHARLIE、DELTA，每次使用不同的priId)
+ * POST /conv/chat/single (4次并行：ALPHA、BRAVO、CHARLIE、DELTA，每次使用不同的priId)
  * Headers: { userId: string, Accept: 'text/event-stream' }
  * Body: CreateConversationRequest (包含priId)
  *
- * 通过 Vite proxy 代理到: http://192.168.157.104:8901/conv/chat
- * 前端调用路径: /api/conv/chat (会被 proxy 转发)
+ * 通过 Vite proxy 代理到: http://192.168.157.104:8901/conv/chat/single
+ * 前端调用路径: /api/conv/chat/single (会被 proxy 转发)
  *
  * 注意：4路请求并行执行，同时开始流式响应
  */
@@ -114,7 +114,7 @@ export async function chatConversationMultiModel(
     }
 
     try {
-      const response = await fetch('/api/conv/chat', {
+      const response = await fetch('/api/conv/chat/single', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
