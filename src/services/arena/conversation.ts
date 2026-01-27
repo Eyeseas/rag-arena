@@ -59,7 +59,7 @@ export async function createConversation(
 }
 
 /**
- * 多模型对话开始（流式）- 按顺序发送4个SSE请求（A、B、C、D）
+ * 多模型对话开始（流式）- 并行发送4个SSE请求（A、B、C、D）
  *
  * @param userId 用户ID
  * @param request 对话请求基础参数
@@ -86,14 +86,14 @@ export async function createConversation(
  *
  * @remarks
  * 真实接口对接时，需要调用:
- * POST /conv/chat (4次，按顺序：ALPHA、BRAVO、CHARLIE、DELTA，每次使用不同的priId)
+ * POST /conv/chat (4次并行：ALPHA、BRAVO、CHARLIE、DELTA，每次使用不同的priId)
  * Headers: { userId: string, Accept: 'text/event-stream' }
  * Body: CreateConversationRequest (包含priId)
  *
  * 通过 Vite proxy 代理到: http://192.168.157.104:8901/conv/chat
  * 前端调用路径: /api/conv/chat (会被 proxy 转发)
  *
- * 注意：按顺序执行，每个模型完成后再发送下一个模型的请求
+ * 注意：4路请求并行执行，同时开始流式响应
  */
 export async function chatConversationMultiModel(
   userId: string,
@@ -122,15 +122,15 @@ export async function chatConversationMultiModel(
     return
   }
 
-  // 真实接口调用 - 按顺序发送4个SSE请求（A、B、C、D）
+  // 真实接口调用 - 并行发送4个SSE请求（A、B、C、D）
   const { readSseStream } = await import('@/lib/sse')
 
-  // 按顺序发送所有模型的SSE请求
-  for (const maskCode of orderedMaskCodes) {
+  // 并行发送所有模型的SSE请求
+  const streamPromises = orderedMaskCodes.map(async (maskCode) => {
     const priId = priIdMapping[maskCode]
     if (!priId) {
       console.warn(`[ArenaApi] No priId found for ${maskCode}, skipping`)
-      continue
+      return
     }
 
     try {
@@ -182,7 +182,10 @@ export async function chatConversationMultiModel(
       console.error(`[ArenaApi] chatConversationMultiModel failed for ${maskCode}:`, error)
       handlers.onError(maskCode, error instanceof Error ? error : new Error('Unknown error'))
     }
-  }
+  })
+
+  // 等待所有流完成
+  await Promise.all(streamPromises)
 }
 
 /**
