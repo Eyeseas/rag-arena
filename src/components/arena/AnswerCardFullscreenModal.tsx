@@ -174,6 +174,11 @@ export function AnswerCardFullscreenModal({
               <span className="text-slate-600 text-sm">模型 {answer.providerId} 正在思考...</span>
             </div>
           )}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-slate-400">
+              ⚠️ 内容由 AI 生成，可能存在错误，请自行核实相关信息
+            </p>
+          </div>
         </div>
 
         <div className="flex-shrink-0 p-4 border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">

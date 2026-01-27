@@ -105,6 +105,15 @@ export function ArenaAnswerSection({
         />
       )}
 
+      {/* AI 生成内容免责提示 */}
+      {hasAnswers && !isLoading && (
+        <div className="text-center mt-4 py-2">
+          <p className="text-xs text-slate-400">
+            ⚠️ 以上内容均由 AI 模型生成，可能存在错误或不准确之处，请自行核实相关数据和信息
+          </p>
+        </div>
+      )}
+
       {/* 投票提示 */}
       {hasAnswers && !votedAnswerId && !isLoading && (
         <div className="text-center mt-8 py-4 glass rounded-2xl">

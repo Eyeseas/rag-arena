@@ -206,6 +206,15 @@ export const AnswerCard = memo(function AnswerCard({
         />
       )}
 
+      {/* AI 生成内容提示 */}
+      {hasContent && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <p className="text-xs text-slate-400 text-center">
+            ⚠️ 内容由 AI 生成，可能存在错误，请自行核实相关信息
+          </p>
+        </div>
+      )}
+
       <Suspense fallback={<Spin size="small" />}>
         <AnswerCardFullscreenModal
           open={fullscreenOpen}
