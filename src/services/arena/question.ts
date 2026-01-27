@@ -5,14 +5,7 @@
 import type { ArenaResponse } from '@/types/arena'
 import type { DateRange } from '@/types/common'
 import type { SubmitQuestionStreamHandlers } from './types'
-import { shouldUseMock } from './utils'
 import { dispatchJsonSseEvent } from './sseJson'
-import {
-  MOCK_DELAY,
-  delay,
-  generateMockArenaResponse,
-  splitTextToChunks,
-} from '@/data/mock'
 import { post } from '@/lib/request'
 
 /**
@@ -37,13 +30,6 @@ export async function submitQuestion(
   question: string,
   dateRange?: DateRange
 ): Promise<ArenaResponse> {
-  // 如果使用 mock 模式，返回 mock 数据
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.question)
-    return generateMockArenaResponse(question)
-  }
-
-  // 真实接口调用
   try {
     const body: Record<string, string> = { question }
     if (dateRange?.[0]) {
@@ -97,48 +83,6 @@ export async function submitQuestionStream(
   dateRange: DateRange | undefined,
   handlers: SubmitQuestionStreamHandlers
 ): Promise<void> {
-  // 如果使用 mock 模式，使用 mock 数据
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.streamInit)
-
-    const mock = generateMockArenaResponse(question)
-
-    // 发送 Meta 事件
-    handlers.onMeta({
-      protocolVersion: 1,
-      requestId: `mock_${Date.now()}`,
-      questionId: mock.questionId,
-      question: mock.question,
-      answers: mock.answers.map((a) => ({ answerId: a.id, providerId: a.providerId })),
-    })
-
-    // 模拟流式输出每个回答
-    for (const answer of mock.answers) {
-      const deltas = splitTextToChunks(answer.content)
-      let seq = 1
-
-      for (const delta of deltas) {
-        handlers.onDelta({ answerId: answer.id, seq, delta })
-        seq += 1
-      }
-
-      handlers.onAnswerDone({
-        answerId: answer.id,
-        content: answer.content,
-        citations: answer.citations,
-      })
-    }
-
-    // 发送完成事件
-    handlers.onDone({
-      questionId: mock.questionId,
-      ok: true,
-      durationMs: 0,
-    })
-    return
-  }
-
-  // 真实接口调用 - SSE 流式请求
   try {
     const body: Record<string, string> = { question }
     if (dateRange?.[0]) {

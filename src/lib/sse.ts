@@ -1,8 +1,5 @@
 /**
  * SSE (Server-Sent Events) 流式读取工具
- * 
- * 当前为 Mock 模式，此模块暂未使用
- * 后续对接真实 SSE 接口时启用
  */
 
 export type SseEventMessage = {

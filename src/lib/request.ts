@@ -1,8 +1,7 @@
 /**
  * HTTP 请求工具
  * 
- * 支持三种模式：
- * - mock 模式：使用 mock 数据，不发起真实请求
+ * 支持两种模式：
  * - dev 模式：使用相对路径，通过 Vite proxy 代理到开发服务器
  * - prod 模式：使用环境变量配置的正式环境 API 地址
  * 
@@ -23,18 +22,12 @@ import axios, { type AxiosRequestConfig } from 'axios'
 /**
  * 获取 API 基础地址
  * 根据不同的模式返回不同的 baseURL：
- * - mock 模式：返回空字符串（实际不会发起请求）
  * - dev 模式：返回空字符串（使用相对路径，走 Vite proxy）
  * - prod 模式：返回环境变量配置的正式环境地址
  */
 const getBaseURL = () => {
   const apiMode = import.meta.env.VITE_API_MODE || 'dev'
   const envURL = import.meta.env.VITE_API_BASE_URL
-  
-  // mock 模式：返回空字符串（实际不会发起请求，由服务层处理）
-  if (apiMode === 'mock') {
-    return ''
-  }
   
   // dev 模式：使用相对路径，走 Vite proxy
   if (apiMode === 'dev') {

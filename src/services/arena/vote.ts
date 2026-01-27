@@ -9,25 +9,12 @@ import type {
   SubmitVoteFeedbackRequest,
   SubmitVoteFeedbackResponse,
 } from '@/types/arena'
-import { shouldUseMock } from './utils'
-import {
-  MOCK_DELAY,
-  delay,
-  generateMockVoteResponse,
-  generateMockStatsResponse,
-} from '@/data/mock'
 import { get, post } from '@/lib/request'
 
 /**
  * 提交投票（按住投票，投票后不可取消）
  */
 export async function submitVote(request: VoteRequest, userId?: string): Promise<VoteResponse> {
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.vote)
-    console.log('[Mock] Vote submitted:', request)
-    return generateMockVoteResponse()
-  }
-
   try {
     const response = await get<{ code: number; msg: string; data: boolean }>('/conv/like', {
       params: { priId: request.priId },
@@ -67,16 +54,6 @@ export async function submitVote(request: VoteRequest, userId?: string): Promise
 export async function submitVoteFeedback(
   request: SubmitVoteFeedbackRequest
 ): Promise<SubmitVoteFeedbackResponse> {
-  // 如果使用 mock 模式，返回 mock 数据
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.vote)
-    console.log('[Mock] Vote feedback submitted:', request)
-    return {
-      success: true,
-    }
-  }
-
-  // 真实接口调用
   try {
     const response = await post<SubmitVoteFeedbackResponse>('/api/arena/vote/feedback', request)
     return response
@@ -102,13 +79,6 @@ export async function submitVoteFeedback(
  * GET /api/arena/stats
  */
 export async function getStats(): Promise<StatsResponse> {
-  // 如果使用 mock 模式，返回 mock 数据
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.stats)
-    return generateMockStatsResponse()
-  }
-
-  // 真实接口调用
   try {
     const response = await get<StatsResponse>('/api/arena/stats')
     return response

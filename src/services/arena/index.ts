@@ -1,8 +1,7 @@
 /**
  * Arena API - RAG 问答竞技场接口服务
  *
- * 支持三种模式：
- * - mock 模式：使用模拟数据，不调用真实接口
+ * 支持两种模式：
  * - dev 模式：调用开发环境接口（通过 Vite proxy）
  * - prod 模式：调用正式环境接口
  */
@@ -21,7 +20,7 @@ export type {
 } from './types'
 
 // 导出工具函数
-export { shouldUseMock, maskCodeToProviderId, orderedMaskCodes } from './utils'
+export { maskCodeToProviderId, orderedMaskCodes } from './utils'
 
 // 导出各模块函数
 export { submitQuestion, submitQuestionStream } from './question'

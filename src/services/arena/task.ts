@@ -7,8 +7,6 @@ import type {
   TaskAddRequest,
   TaskAddResponse,
 } from '@/types/arena'
-import { shouldUseMock } from './utils'
-import { MOCK_DELAY, delay } from '@/data/mock'
 import { get, post } from '@/lib/request'
 
 /**
@@ -45,8 +43,6 @@ export async function getTaskList(userId: string): Promise<TaskListResponse> {
     console.log('[ArenaApi] getTaskList response:', response)
     return response
   } catch (error) {
-    // 如果接口调用失败，抛出错误，不返回 mock 数据
-    // 这样可以让调用方知道接口调用失败，而不是显示错误的 mock 数据
     console.error('[ArenaApi] getTaskList failed:', error)
     throw error
   }
@@ -83,17 +79,6 @@ export async function addTask(
 ): Promise<TaskAddResponse> {
   console.log('addTask', userId, request)
   try {
-    // 如果使用 mock 模式，返回 mock 数据
-    if (shouldUseMock()) {
-      await delay(MOCK_DELAY.vote)
-      console.log('[Mock] Task added:', request)
-      return {
-        code: 0,
-        msg: 'success',
-        data: true,
-      }
-    }
-
     // 通过 proxy 调用，路径 /api/task/add 会被代理到 http://192.168.157.104:8901/task/add
     const response = await post<TaskAddResponse>('/api/task/add', request, {
       headers: {

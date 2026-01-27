@@ -7,8 +7,7 @@ import type {
   CreateConversationResponse,
 } from '@/types/arena'
 import type { ChatStreamEvent, ChatStreamHandlers, MultiModelChatStreamHandlers } from './types'
-import { shouldUseMock, orderedMaskCodes } from './utils'
-import { MOCK_DELAY, delay, splitTextToChunks } from '@/data/mock'
+import { orderedMaskCodes } from './utils'
 import { post } from '@/lib/request'
 
 /**
@@ -102,25 +101,6 @@ export async function chatConversationMultiModel(
   handlers: MultiModelChatStreamHandlers
 ): Promise<void> {
   console.log('chatConversationMultiModel', userId, request, priIdMapping)
-
-  // 如果使用 mock 模式，模拟流式响应
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.streamInit)
-
-    const maskCodes = Object.keys(priIdMapping)
-    for (const maskCode of maskCodes) {
-      const mockContent = `这是模型 ${maskCode} 的模拟回答内容。`
-      const deltas = splitTextToChunks(mockContent, 10)
-
-      for (const delta of deltas) {
-        await delay(50)
-        handlers.onDelta(maskCode, delta)
-      }
-
-      handlers.onDone(maskCode, [])
-    }
-    return
-  }
 
   // 真实接口调用 - 并行发送4个SSE请求（A、B、C、D）
   const { readSseStream } = await import('@/lib/sse')
@@ -222,23 +202,6 @@ export async function chatConversation(
   handlers: ChatStreamHandlers
 ): Promise<void> {
   console.log('chatConversation', userId, request)
-
-  // 如果使用 mock 模式，模拟流式响应
-  if (shouldUseMock()) {
-    await delay(MOCK_DELAY.streamInit)
-
-    const sessionId = request.session_id || `mock_session_${Date.now()}`
-    const mockContent = '这是一个模拟的流式回答内容。在实际使用中，这里会是从服务器实时接收的增量内容。'
-    const deltas = splitTextToChunks(mockContent, 10)
-
-    for (const delta of deltas) {
-      await delay(50)
-      handlers.onDelta(sessionId, delta)
-    }
-
-    handlers.onDone(sessionId, [])
-    return
-  }
 
   // 真实接口调用 - SSE 流式请求
   try {
