@@ -8,6 +8,7 @@ import {
   ExpandOutlined,
 } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
+import { Think } from '@ant-design/x'
 import '@ant-design/x-markdown/themes/light.css'
 import type { Answer, Citation } from '@/types/arena'
 import { HoldToConfirmButton } from './HoldToConfirmButton'
@@ -192,7 +193,13 @@ export const AnswerCard = memo(function AnswerCard({
           </div>
         )}
         {hasContent && (
-          <XMarkdown className="x-markdown-light prose prose-slate prose-sm max-w-none" content={answer.content} />
+          <XMarkdown
+            className="x-markdown-light prose prose-slate prose-sm max-w-none"
+            content={answer.content}
+            components={{
+              think: ({ children }) => <Think title="深度思考">{children}</Think>,
+            }}
+          />
         )}
       </div>
 

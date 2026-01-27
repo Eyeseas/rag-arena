@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Alert, Button, Input, Modal, Spin } from 'antd'
 import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
+import { Think } from '@ant-design/x'
 
 import type { Answer, Citation } from '@/types/arena'
 import type { FollowUpChatMessage } from '@/types/arenaUi'
@@ -113,6 +114,9 @@ export function AnswerCardFullscreenModal({
               <XMarkdown
                 className="x-markdown-light prose prose-slate prose-sm max-w-none"
                 content={answer.content}
+                components={{
+                  think: ({ children }) => <Think title="深度思考">{children}</Think>,
+                }}
               />
             )}
           </div>
@@ -164,6 +168,9 @@ export function AnswerCardFullscreenModal({
               <XMarkdown
                 className="x-markdown-light prose prose-slate prose-sm max-w-none"
                 content={msg.content}
+                components={{
+                  think: ({ children }) => <Think title="深度思考">{children}</Think>,
+                }}
               />
             </div>
           ))}

@@ -141,11 +141,8 @@ export async function chatConversationMultiModel(
           if (data.choices && data.choices.length > 0) {
             const choice = data.choices[0]
             if (choice.delta?.content) {
-              // 过滤掉 <think> 标签内容
-              const trimmedContent = choice.delta.content.trim()
-              if (trimmedContent !== '<think>' && trimmedContent !== '</think>' && trimmedContent !== '') {
-                handlers.onDelta(maskCode, choice.delta.content)
-              }
+              // 保留 <think> 标签内容，由前端 Think 组件渲染
+              handlers.onDelta(maskCode, choice.delta.content)
             }
 
             // 如果完成，调用 onDone
