@@ -280,3 +280,95 @@ export async function getConversationHistory(
   
   return response
 }
+
+/**
+ * 私聊（单个模型追问）- 流式响应
+ *
+ * @param userId 用户ID
+ * @param request 对话请求（包含priId）
+ * @param handlers 流式回调处理器
+ *
+ * @example
+ * ```ts
+ * await chatPrivate('user_123', {
+ *   taskId: 'task_1',
+ *   priId: 'priId1',
+ *   session_id: 'session_123',
+ *   messages: [
+ *     { role: 'user', content: '第一个问题' },
+ *     { role: 'assistant', content: '第一个回答' },
+ *     { role: 'user', content: '追问问题' }
+ *   ]
+ * }, {
+ *   onDelta: (content) => console.log('Delta:', content),
+ *   onDone: (citations) => console.log('Done:', citations),
+ *   onError: (error) => console.error('Error:', error),
+ * })
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * POST /conv/chat/pri
+ * Headers: { userId: string, Accept: 'text/event-stream' }
+ * Body: CreateConversationRequest (包含priId)
+ *
+ * 通过 Vite proxy 代理到: http://192.168.157.104:8901/conv/chat/pri
+ * 前端调用路径: /api/conv/chat/pri (会被 proxy 转发)
+ */
+export async function chatPrivate(
+  userId: string,
+  request: CreateConversationRequest,
+  handlers: {
+    onDelta: (content: string) => void
+    onDone: (citations?: import('@/types/arena').Citation[]) => void
+    onError: (error: Error) => void
+  }
+): Promise<void> {
+  console.log('chatPrivate', userId, request)
+
+  try {
+    const response = await fetch('/api/conv/chat/pri', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        userId,
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+
+    // 使用 SSE 工具解析流式响应
+    const { readSseStream } = await import('@/lib/sse')
+
+    await readSseStream(response, (msg) => {
+      try {
+        const data: ChatStreamEvent = JSON.parse(msg.data)
+
+        // 处理增量内容
+        if (data.choices && data.choices.length > 0) {
+          const choice = data.choices[0]
+          if (choice.delta?.content) {
+            handlers.onDelta(choice.delta.content)
+          }
+
+          // 如果完成，调用 onDone
+          if (choice.finish_reason) {
+            handlers.onDone(data.citations)
+          }
+        }
+      } catch (error) {
+        console.error('[ArenaApi] Failed to parse SSE event:', error)
+        handlers.onError(error instanceof Error ? error : new Error('Failed to parse SSE event'))
+      }
+    })
+  } catch (error) {
+    console.error('[ArenaApi] chatPrivate failed:', error)
+    handlers.onError(error instanceof Error ? error : new Error('Unknown error'))
+    throw error
+  }
+}

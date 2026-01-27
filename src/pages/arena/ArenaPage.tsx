@@ -20,6 +20,7 @@ export function ArenaPage() {
   // 使用自定义 Hooks
   const {
     activeSessionId,
+    activeSession,
     question,
     answers,
     votedAnswerId,
@@ -127,6 +128,8 @@ export function ArenaPage() {
             onLayoutModeChange={setLayoutMode}
             onVote={handleVote}
             onOpenSources={() => openSources('all')}
+            taskId={activeSession?.taskId}
+            sessionId={activeSession?.serverQuestionId || activeSessionId}
           />
         )}
       </div>

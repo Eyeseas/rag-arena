@@ -37,6 +37,10 @@ interface ArenaAnswerSectionProps {
   onVote: (answerId: string) => void
   /** 打开引用面板回调 */
   onOpenSources: () => void
+  /** 任务ID */
+  taskId?: string
+  /** 会话ID */
+  sessionId?: string
 }
 
 /**
@@ -54,6 +58,8 @@ export function ArenaAnswerSection({
   onLayoutModeChange,
   onVote,
   onOpenSources,
+  taskId = '',
+  sessionId = '',
 }: ArenaAnswerSectionProps) {
   return (
     <div className="flex-1 w-full animate-fade-in">
@@ -102,6 +108,9 @@ export function ArenaAnswerSection({
           onVote={onVote}
           layoutMode={layoutMode}
           disableVoting={isLoading}
+          taskId={taskId}
+          sessionId={sessionId}
+          initialQuestion={question}
         />
       )}
 

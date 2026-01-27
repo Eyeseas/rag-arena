@@ -21,6 +21,12 @@ interface AnswerGridProps {
   layoutMode?: LayoutMode
   /** 禁用投票（如流式生成中） */
   disableVoting?: boolean
+  /** 任务ID（用于追问） */
+  taskId?: string
+  /** 会话ID（用于追问） */
+  sessionId?: string
+  /** 初始问题（用于追问） */
+  initialQuestion?: string
 }
 
 // 供应商标识颜色映射
@@ -52,6 +58,9 @@ export const AnswerGrid = memo(function AnswerGrid({
   onVote,
   layoutMode = 'two-col',
   disableVoting = false,
+  taskId = '',
+  sessionId = '',
+  initialQuestion = '',
 }: AnswerGridProps) {
   // 当前悬浮在投票按钮上的回答 ID
   const [hoveredAnswerId, setHoveredAnswerId] = useState<string | null>(null)
@@ -89,6 +98,9 @@ export const AnswerGrid = memo(function AnswerGrid({
                 onVote={() => onVote(answer.id)}
                 isBlurred={hoveredAnswerId !== null && hoveredAnswerId !== answer.id}
                 onVoteHover={(isHovering) => setHoveredAnswerId(isHovering ? answer.id : null)}
+                taskId={taskId}
+                sessionId={sessionId}
+                initialQuestion={initialQuestion}
               />
             ),
           }))}
@@ -118,6 +130,9 @@ export const AnswerGrid = memo(function AnswerGrid({
               onVote={() => onVote(answer.id)}
               isBlurred={hoveredAnswerId !== null && hoveredAnswerId !== answer.id}
               onVoteHover={(isHovering) => setHoveredAnswerId(isHovering ? answer.id : null)}
+              taskId={taskId}
+              sessionId={sessionId}
+              initialQuestion={initialQuestion}
             />
           </Col>
         ))}

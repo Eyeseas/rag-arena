@@ -34,6 +34,12 @@ interface AnswerCardProps {
   isBlurred?: boolean
   /** 投票按钮悬浮状态变化回调 */
   onVoteHover?: (isHovering: boolean) => void
+  /** 任务ID（用于追问） */
+  taskId?: string
+  /** 会话ID（用于追问） */
+  sessionId?: string
+  /** 初始问题（用于追问） */
+  initialQuestion?: string
 }
 
 export const AnswerCard = memo(function AnswerCard({
@@ -44,6 +50,9 @@ export const AnswerCard = memo(function AnswerCard({
   onVote,
   isBlurred = false,
   onVoteHover,
+  taskId = '',
+  sessionId = '',
+  initialQuestion = '',
 }: AnswerCardProps) {
   const config = getProviderVisualConfig(answer.providerId)
   const [citationsExpanded, setCitationsExpanded] = useState(false)
@@ -62,7 +71,12 @@ export const AnswerCard = memo(function AnswerCard({
     hasAskedFollowUp,
     handleSendMessage,
     handleKeyDown,
-  } = useAnswerFollowUpChat(answer.providerId)
+  } = useAnswerFollowUpChat({
+    answer,
+    taskId,
+    sessionId,
+    initialQuestion,
+  })
 
   // 内容区域 ref，用于自动滚动
   const contentRef = useRef<HTMLDivElement>(null)
