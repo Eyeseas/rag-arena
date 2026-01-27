@@ -16,7 +16,7 @@ import { get, post } from '@/lib/request'
  */
 export async function submitVote(request: VoteRequest, userId?: string): Promise<VoteResponse> {
   try {
-    const response = await get<{ code: number; msg: string; data: boolean }>('/conv/like', {
+    const response = await get<{ code: number; msg: string; data: boolean }>('/api/conv/like', {
       params: { priId: request.priId },
       headers: userId ? { userId } : undefined,
     })
