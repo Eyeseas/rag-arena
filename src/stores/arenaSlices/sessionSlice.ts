@@ -11,8 +11,9 @@ import {
 import { arenaApi, maskCodeToProviderId } from '@/services/arena'
 import { getUserId } from '@/lib/userId'
 
-function convertHistoryToAnswers(historyData: HistoryChatVO): Answer[] {
+function convertHistoryToAnswers(historyData: HistoryChatVO): { answers: Answer[], priIdMapping: Record<string, string> } {
   const answers: Answer[] = []
+  const priIdMapping: Record<string, string> = {}
   const { chatMap } = historyData
   
   for (const [maskCode, chatList] of Object.entries(chatMap)) {
@@ -29,9 +30,14 @@ function convertHistoryToAnswers(historyData: HistoryChatVO): Answer[] {
     const lastChat = chatList[chatList.length - 1]
     const citations = lastChat?.citations || []
     const liked = chatList.some((chat: ChatRespWithLikedVO) => chat.liked)
+    const privateId = lastChat?.privateId
+    
+    if (privateId) {
+      priIdMapping[maskCode] = privateId
+    }
     
     answers.push({
-      id: lastChat?.privateId || createId(),
+      id: privateId || createId(),
       content: fullContent,
       providerId,
       citations,
@@ -39,10 +45,12 @@ function convertHistoryToAnswers(historyData: HistoryChatVO): Answer[] {
     } as Answer & { liked?: boolean })
   }
   
-  return answers.sort((a, b) => {
+  const sortedAnswers = answers.sort((a, b) => {
     const order = ['A', 'B', 'C', 'D']
     return order.indexOf(a.providerId) - order.indexOf(b.providerId)
   })
+  
+  return { answers: sortedAnswers, priIdMapping }
 }
 
 export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSlice> = (set, get) => {
@@ -127,11 +135,9 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
     loadSessionHistory: async (sessionId) => {
       const { sessions } = get()
       const session = sessions.find((s) => s.id === sessionId)
-      console.log('[loadSessionHistory] sessionId:', sessionId, 'found session:', !!session)
       if (!session) return
 
       const hasLoadedHistory = session.answers.length > 0 || session.question.length > 0
-      console.log('[loadSessionHistory] hasLoadedHistory:', hasLoadedHistory, 'answers:', session.answers.length, 'question:', session.question)
       if (hasLoadedHistory) return
 
       set({ isLoadingHistory: true })
@@ -139,12 +145,10 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
       try {
         const userId = getUserId()
         const response = await arenaApi.getConversationHistory(userId, sessionId)
-        console.log('[loadSessionHistory] response:', response)
 
         if ((response.code === 0 || response.code === 200) && response.data) {
           const historyData = response.data
-          const answers = convertHistoryToAnswers(historyData)
-          console.log('[loadSessionHistory] converted answers:', answers)
+          const { answers, priIdMapping } = convertHistoryToAnswers(historyData)
           const votedAnswer = answers.find((a: Answer & { liked?: boolean }) => a.liked)
 
           set((state) => ({
@@ -155,6 +159,7 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
                     question: historyData.question || '',
                     title: historyData.question ? (historyData.question.length > 24 ? `${historyData.question.slice(0, 24)}…` : historyData.question) : s.title,
                     answers,
+                    priIdMapping,
                     votedAnswerId: votedAnswer?.id || null,
                     serverQuestionId: historyData.sessionId,
                     updatedAt: Date.now(),
