@@ -54,6 +54,7 @@ export function useTaskSidebarController({
   const deleteSession = useArenaStore((s) => s.deleteSession)
   const renameSession = useArenaStore((s) => s.renameSession)
   const setActiveTaskId = useArenaStore((s) => s.setActiveTaskId)
+  const loadSessionHistory = useArenaStore((s) => s.loadSessionHistory)
 
   const { fetchTaskList } = useArenaTaskListSync()
 
@@ -176,9 +177,10 @@ export function useTaskSidebarController({
     }, 0)
   }
 
-  const handleSelectSession = (sessionId: string) => {
+  const handleSelectSession = async (sessionId: string) => {
     if (disabled) return
     setActiveSessionId(sessionId)
+    await loadSessionHistory(sessionId)
     onAfterSelect?.()
   }
 

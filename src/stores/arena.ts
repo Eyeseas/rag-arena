@@ -13,7 +13,6 @@ import { createAnswerSlice } from './arenaSlices/answerSlice'
 export type { ArenaSession } from './arenaTypes'
 
 export const useArenaStore = create<ArenaState>()((set, get, api) => ({
-  // 初始状态：不持久化，从服务器获取
   tasks: [],
   sessions: [],
   activeTaskId: '',
@@ -22,6 +21,7 @@ export const useArenaStore = create<ArenaState>()((set, get, api) => ({
   isVoting: false,
   isTasksLoading: false,
   hasFetchedTasks: false,
+  isLoadingHistory: false,
 
   ...createHydrationSlice(set, get, api),
   ...createTaskSlice(set, get, api),

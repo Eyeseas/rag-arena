@@ -376,3 +376,72 @@ export interface CreateConversationResponse {
   /** 响应数据 */
   data: ConvCreatedVO
 }
+
+// ============================================================================
+// 历史会话相关类型
+// ============================================================================
+
+/**
+ * 聊天选项（增量内容）
+ */
+export interface ChatChoice {
+  /** 索引 */
+  index: number
+  /** 增量内容 */
+  delta: {
+    content?: string
+  }
+  /** 完成原因 */
+  finish_reason?: string
+}
+
+/**
+ * 带点赞状态的聊天响应
+ * 对应 API: GET /conv/his 返回的单条聊天记录
+ */
+export interface ChatRespWithLikedVO {
+  /** 会话ID */
+  session_id?: string
+  /** 对象类型 */
+  object?: string
+  /** 创建时间戳 */
+  created?: number
+  /** 聊天选项列表 */
+  choices?: ChatChoice[]
+  /** 引用列表 */
+  citations?: Citation[]
+  /** 模型名称 */
+  maskName?: string
+  /** 模型代码 */
+  maskCode?: string
+  /** 私有ID */
+  privateId?: string
+  /** 是否已点赞 */
+  liked?: boolean
+}
+
+/**
+ * 历史会话数据
+ * 对应 API: GET /conv/his 返回的 data 字段
+ */
+export interface HistoryChatVO {
+  /** 会话ID */
+  sessionId: string
+  /** 问题内容 */
+  question: string
+  /** 聊天记录映射 (key: 模型代码, value: 聊天记录列表) */
+  chatMap: Record<string, ChatRespWithLikedVO[]>
+}
+
+/**
+ * 历史会话响应
+ * 对应 API: GET /conv/his
+ */
+export interface HistoryChatResponse {
+  /** 响应码 */
+  code: number
+  /** 响应消息 */
+  msg: string
+  /** 响应数据 */
+  data: HistoryChatVO
+}

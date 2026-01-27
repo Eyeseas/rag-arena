@@ -7,22 +7,15 @@ import type { Answer, CommonTreeDict, Task } from '@/types/arena'
 import type { ArenaSession } from './arenaTypes'
 
 export interface ArenaCoreState {
-  /** 任务列表 */
   tasks: Task[]
-  /** 历史会话列表 */
   sessions: ArenaSession[]
-  /** 当前任务 ID */
   activeTaskId: string
-  /** 当前会话 ID */
   activeSessionId: string
-  /** 加载状态（流式生成中） */
   isLoading: boolean
-  /** 点赞加载状态 */
   isVoting: boolean
-  /** 任务列表加载状态 */
   isTasksLoading: boolean
-  /** 是否已从服务器获取过任务列表 */
   hasFetchedTasks: boolean
+  isLoadingHistory: boolean
 }
 
 export interface ArenaHydrationSlice {
@@ -49,11 +42,11 @@ export interface ArenaTaskSlice {
 }
 
 export interface ArenaSessionSlice {
-  // Session Actions
   startNewSession: () => Promise<string>
   setActiveSessionId: (sessionId: string) => void
   deleteSession: (sessionId: string) => void
   renameSession: (sessionId: string, title: string) => void
+  loadSessionHistory: (sessionId: string) => Promise<void>
 }
 
 export interface ArenaAnswerSlice {

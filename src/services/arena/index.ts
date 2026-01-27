@@ -27,14 +27,14 @@ export { shouldUseMock, maskCodeToProviderId, orderedMaskCodes } from './utils'
 export { submitQuestion, submitQuestionStream } from './question'
 export { submitVote, submitVoteFeedback, getStats } from './vote'
 export { getTaskList, addTask } from './task'
-export { createConversation, chatConversationMultiModel, chatConversation } from './conversation'
+export { createConversation, chatConversationMultiModel, chatConversation, getConversationHistory } from './conversation'
 export { getCitationDetail } from './citation'
 
 // 导入函数用于构建 arenaApi 对象
 import { submitQuestion, submitQuestionStream } from './question'
 import { submitVote, submitVoteFeedback, getStats } from './vote'
 import { getTaskList, addTask } from './task'
-import { createConversation, chatConversationMultiModel, chatConversation } from './conversation'
+import { createConversation, chatConversationMultiModel, chatConversation, getConversationHistory } from './conversation'
 import { getCitationDetail } from './citation'
 
 /**
@@ -42,26 +42,16 @@ import { getCitationDetail } from './citation'
  * 包含所有竞技场相关的 API 方法
  */
 export const arenaApi = {
-  /** 提交问题 (非流式) */
   submitQuestion,
-  /** 提交问题 (流式 SSE) */
   submitQuestionStream,
-  /** 提交投票 */
   submitVote,
-  /** 提交投票反馈 */
   submitVoteFeedback,
-  /** 获取统计数据 */
   getStats,
-  /** 获取引用详情 */
   getCitationDetail,
-  /** 获取任务列表 */
   getTaskList,
-  /** 创建对话 */
   createConversation,
-  /** 对话开始 (流式) - 单模型版本 */
   chatConversation,
-  /** 对话开始 (流式) - 多模型并行版本 */
   chatConversationMultiModel,
-  /** 添加任务 */
   addTask,
+  getConversationHistory,
 }

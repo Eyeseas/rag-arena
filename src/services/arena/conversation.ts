@@ -300,3 +300,23 @@ export async function chatConversation(
     throw error
   }
 }
+
+export async function getConversationHistory(
+  userId: string,
+  sessionId: string,
+  priId?: string
+): Promise<import('@/types/arena').HistoryChatResponse> {
+  const { get } = await import('@/lib/request')
+  
+  const params: Record<string, string> = { sessionId }
+  if (priId) {
+    params.priId = priId
+  }
+  
+  const response = await get<import('@/types/arena').HistoryChatResponse>('/api/conv/his', {
+    params,
+    headers: { userId },
+  })
+  
+  return response
+}
