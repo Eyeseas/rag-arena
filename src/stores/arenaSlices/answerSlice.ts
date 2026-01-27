@@ -3,7 +3,7 @@ import type { Answer } from '@/types/arena'
 import type { ArenaAnswerSlice, ArenaState } from '../arenaStoreTypes'
 import { createEmptySession, toSessionTitle } from '../arenaHelpers'
 import { touchTask, updateActiveSession } from './internalHelpers'
-import { truncateStreamContent } from '@/lib/streamTruncate'
+import { truncateStreamContent, isStreamTruncated } from '@/lib/streamTruncate'
 
 export const createAnswerSlice: StateCreator<ArenaState, [], [], ArenaAnswerSlice> = (set, get) => {
   return {
@@ -66,11 +66,11 @@ export const createAnswerSlice: StateCreator<ArenaState, [], [], ArenaAnswerSlic
       updateActiveSession(set, get, (s) => ({
         ...s,
         updatedAt: Date.now(),
-        answers: s.answers.map((answer) =>
-          answer.id === answerId
-            ? { ...answer, content: truncateStreamContent(`${answer.content}${delta}`) }
-            : answer
-        ),
+        answers: s.answers.map((answer) => {
+          if (answer.id !== answerId) return answer
+          if (isStreamTruncated(answer.content)) return answer
+          return { ...answer, content: truncateStreamContent(`${answer.content}${delta}`) }
+        }),
       }))
     },
 
