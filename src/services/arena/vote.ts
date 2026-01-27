@@ -19,37 +19,24 @@ import {
 import { get, post } from '@/lib/request'
 
 /**
- * 提交投票
- *
- * @param request 投票请求
- * @returns 投票响应
- *
- * @example
- * ```ts
- * const response = await submitVote({
- *   questionId: 'q_123',
- *   answerId: 'q_123_a',
- * })
- * console.log(response.success) // true
- * ```
- *
- * @remarks
- * 真实接口对接时，需要调用:
- * POST /api/arena/vote
- * Body: { questionId: string, answerId: string }
+ * 提交投票（按住投票，投票后不可取消）
  */
-export async function submitVote(request: VoteRequest): Promise<VoteResponse> {
-  // 如果使用 mock 模式，返回 mock 数据
+export async function submitVote(request: VoteRequest, userId?: string): Promise<VoteResponse> {
   if (shouldUseMock()) {
     await delay(MOCK_DELAY.vote)
     console.log('[Mock] Vote submitted:', request)
     return generateMockVoteResponse()
   }
 
-  // 真实接口调用
   try {
-    const response = await post<VoteResponse>('/api/arena/vote', request)
-    return response
+    const response = await get<{ code: number; msg: string; data: boolean }>('/conv/like', {
+      params: { priId: request.priId },
+      headers: userId ? { userId } : undefined,
+    })
+    return {
+      success: response.data === true,
+      message: response.msg,
+    }
   } catch (error) {
     console.error('[ArenaApi] submitVote failed:', error)
     throw error

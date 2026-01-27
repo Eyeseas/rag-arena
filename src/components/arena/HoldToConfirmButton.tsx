@@ -46,19 +46,12 @@ export function HoldToConfirmButton({
   }, [])
 
   const handlePressStart = useCallback(() => {
-    if (disabled || loading) return
-
-    // 如果已点赞，直接触发取消点赞
-    if (isConfirmed) {
-      onConfirm()
-      return
-    }
+    if (disabled || loading || isConfirmed) return
 
     setIsHolding(true)
     setProgress(0)
     startTimeRef.current = Date.now()
 
-    // 进度更新
     progressIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current
       const newProgress = Math.min(elapsed / holdDuration, 1)
@@ -70,7 +63,7 @@ export function HoldToConfirmButton({
         setProgress(0)
         onConfirm()
       }
-    }, 16) // ~60fps
+    }, 16)
   }, [disabled, loading, isConfirmed, holdDuration, onConfirm, clearTimers])
 
   const handlePressEnd = useCallback(() => {
@@ -86,7 +79,7 @@ export function HoldToConfirmButton({
     }
   }, [isHolding, handlePressEnd])
 
-  const isDisabledStyle = disabled && !isConfirmed
+  const isDisabledStyle = (disabled && !isConfirmed) || isConfirmed
 
   return (
     <motion.button

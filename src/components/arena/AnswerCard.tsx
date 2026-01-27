@@ -152,7 +152,7 @@ export const AnswerCard = memo(function AnswerCard({
       }
       extra={
         <div className="flex items-center gap-2">
-          <Tooltip title={isVoted ? '点击取消投票' : disabled ? '已投票给其他回答' : '长按投票'}>
+          <Tooltip title={isVoted ? '已投票' : disabled ? '已投票给其他回答' : '长按投票'}>
             <div>
               <HoldToConfirmButton
                 isConfirmed={isVoted}

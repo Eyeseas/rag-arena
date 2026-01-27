@@ -167,13 +167,12 @@ export interface ArenaResponse {
  * 用户为某个回答投票时发送的请求
  * 
  * @remarks
- * 对应 API: POST /api/arena/vote
+ * 对应 API: GET /conv/like
+ * 投票后不可取消
  */
 export interface VoteRequest {
-  /** 问题 ID - 关联到具体的问答会话 */
-  questionId: string
-  /** 回答 ID - 用户选择的最佳回答 */
-  answerId: string
+  /** 私有会话 ID - 根据会话ID计算来的唯一ID */
+  priId: string
 }
 
 /**

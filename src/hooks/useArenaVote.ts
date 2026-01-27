@@ -8,9 +8,14 @@ import { useState, useCallback } from 'react'
 import { message } from 'antd'
 import { useArenaStore } from '@/stores/arena'
 import { selectAnswerById } from '@/stores/arenaSelectors'
-import { arenaApi } from '@/services/arena'
+import { arenaApi, maskCodeToProviderId } from '@/services/arena'
 import type { VoteFeedbackData } from '@/types/arena'
 import { useArenaSession } from './useArenaSession'
+import { getUserId } from './arenaQuestion/userId'
+
+const providerIdToMaskCode: Record<string, string> = Object.fromEntries(
+  Object.entries(maskCodeToProviderId).map(([k, v]) => [v, k])
+)
 
 /**
  * 投票流程 Hook 返回值
@@ -71,7 +76,7 @@ export interface UseArenaVoteReturn {
  */
 export function useArenaVote(): UseArenaVoteReturn {
   const { setVotedAnswerId } = useArenaStore()
-  const { questionId, answers, votedAnswerId, isLoading } = useArenaSession()
+  const { questionId, answers, votedAnswerId, isLoading, activeSession } = useArenaSession()
 
   const [votingAnswerId, setVotingAnswerId] = useState<string | null>(null)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
@@ -81,42 +86,44 @@ export function useArenaVote(): UseArenaVoteReturn {
   const handleVote = useCallback(
     async (answerId: string) => {
       if (isLoading) return
-      if (!questionId) return
+      if (votedAnswerId) return
 
-      // 如果点击已点赞的回答，取消点赞
-      if (votedAnswerId === answerId) {
-        setVotedAnswerId(null)
+      const answer = selectAnswerById(answers, answerId)
+      if (!answer) return
+
+      const maskCode = providerIdToMaskCode[answer.providerId]
+      const priIdMapping = activeSession?.priIdMapping
+      const priId = priIdMapping?.[maskCode]
+
+      if (!priId) {
+        message.error('投票信息不完整，请刷新页面重试')
         return
       }
 
       setVotingAnswerId(answerId)
 
       try {
-        await arenaApi.submitVote({ questionId, answerId })
+        const userId = getUserId()
+        await arenaApi.submitVote({ priId }, userId)
         setVotedAnswerId(answerId)
         message.success('投票成功！')
 
-        // 找到对应的回答，获取 providerId，打开反馈弹窗
-        const answer = selectAnswerById(answers, answerId)
-        if (answer) {
-          setFeedbackAnswerId(answerId)
-          setFeedbackProviderId(answer.providerId)
-          setFeedbackModalOpen(true)
-        }
+        setFeedbackAnswerId(answerId)
+        setFeedbackProviderId(answer.providerId)
+        setFeedbackModalOpen(true)
       } catch (error) {
         message.error(error instanceof Error ? error.message : '投票失败，请重试')
       } finally {
         setVotingAnswerId(null)
       }
     },
-    [isLoading, questionId, votedAnswerId, answers, setVotedAnswerId]
+    [isLoading, votedAnswerId, answers, activeSession, setVotedAnswerId]
   )
 
   const handleSubmitFeedback = useCallback(
     async (feedbackData: VoteFeedbackData) => {
       if (!questionId || !feedbackAnswerId) return
 
-      // 合并所有反馈原因
       const reasons = [...feedbackData.answerIssues, ...feedbackData.citationIssues]
 
       try {
