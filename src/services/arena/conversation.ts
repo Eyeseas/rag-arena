@@ -133,9 +133,19 @@ export async function chatConversationMultiModel(
       }
 
       // 解析SSE流
+      // 标记是否已收到 finish_reason，等待下一条消息的 citations
+      let waitingForCitations = false
+
       await readSseStream(response, (msg) => {
         try {
           const data: ChatStreamEvent = JSON.parse(msg.data)
+
+          // 如果正在等待 citations，从当前消息提取并调用 onDone
+          if (waitingForCitations) {
+            handlers.onDone(maskCode, data.citations)
+            waitingForCitations = false
+            return
+          }
 
           // 处理增量内容
           if (data.choices && data.choices.length > 0) {
@@ -150,9 +160,9 @@ export async function chatConversationMultiModel(
               handlers.onDelta(maskCode, normalizedContent)
             }
 
-            // 如果完成，调用 onDone
+            // 如果完成，标记等待下一条消息的 citations
             if (choice.finish_reason) {
-              handlers.onDone(maskCode, data.citations)
+              waitingForCitations = true
             }
           }
         } catch (error) {
@@ -226,6 +236,8 @@ export async function chatConversation(
     const { readSseStream } = await import('@/lib/sse')
     let currentSessionId = request.session_id || ''
     let currentPrivateId = ''
+    // 标记是否已收到 finish_reason，等待下一条消息的 citations
+    let waitingForCitations = false
 
     await readSseStream(response, (msg) => {
       try {
@@ -241,6 +253,13 @@ export async function chatConversation(
           currentPrivateId = data.privateId
         }
 
+        // 如果正在等待 citations，从当前消息提取并调用 onDone
+        if (waitingForCitations) {
+          handlers.onDone(currentSessionId, data.citations, currentPrivateId)
+          waitingForCitations = false
+          return
+        }
+
         // 处理增量内容
         if (data.choices && data.choices.length > 0) {
           const choice = data.choices[0]
@@ -250,9 +269,9 @@ export async function chatConversation(
             handlers.onDelta(currentSessionId, normalizedContent, currentPrivateId, data.maskCode, data.maskName)
           }
 
-          // 如果完成，调用 onDone
+          // 如果完成，标记等待下一条消息的 citations
           if (choice.finish_reason) {
-            handlers.onDone(currentSessionId, data.citations, currentPrivateId)
+            waitingForCitations = true
           }
         }
       } catch (error) {
@@ -350,10 +369,19 @@ export async function chatPrivate(
 
     // 使用 SSE 工具解析流式响应
     const { readSseStream } = await import('@/lib/sse')
+    // 标记是否已收到 finish_reason，等待下一条消息的 citations
+    let waitingForCitations = false
 
     await readSseStream(response, (msg) => {
       try {
         const data: ChatStreamEvent = JSON.parse(msg.data)
+
+        // 如果正在等待 citations，从当前消息提取并调用 onDone
+        if (waitingForCitations) {
+          handlers.onDone(data.citations)
+          waitingForCitations = false
+          return
+        }
 
         // 处理增量内容
         if (data.choices && data.choices.length > 0) {
@@ -363,9 +391,9 @@ export async function chatPrivate(
             handlers.onDelta(normalizedContent)
           }
 
-          // 如果完成，调用 onDone
+          // 如果完成，标记等待下一条消息的 citations
           if (choice.finish_reason) {
-            handlers.onDone(data.citations)
+            waitingForCitations = true
           }
         }
       } catch (error) {
