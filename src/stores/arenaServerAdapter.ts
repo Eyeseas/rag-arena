@@ -69,8 +69,8 @@ export function hydrateFromTaskListData(
   }
 
   const keepActiveTask = nextTasks.some((t) => t.id === prev.activeTaskId)
-  const activeTaskId = keepActiveTask ? prev.activeTaskId : nextTasks[0].id
-  const activeSessionId = nextSessions.find((s) => s.taskId === activeTaskId)?.id || ''
+  const activeTaskId = keepActiveTask ? prev.activeTaskId : ''
+  const activeSessionId = activeTaskId ? (nextSessions.find((s) => s.taskId === activeTaskId)?.id || '') : ''
 
   return {
     tasks: nextTasks,
