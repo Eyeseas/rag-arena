@@ -108,7 +108,7 @@ export function useTaskSidebarController({
         description: values.description,
       })
 
-      if (response.code === 0 && response.data) {
+      if ((response.code === 0 || response.code === 200) && response.data) {
         message.success('任务创建成功')
         setIsCreateTaskModalOpen(false)
         createTaskForm.resetFields()
@@ -194,7 +194,22 @@ export function useTaskSidebarController({
       okText: '删除',
       okButtonProps: { danger: true },
       cancelText: '取消',
-      onOk: () => deleteSession(sessionId),
+      onOk: async () => {
+        const userId = getUserId()
+        try {
+          const response = await arenaApi.deleteConversation(userId, sessionId)
+          if ((response.code === 0 || response.code === 200) && response.data) {
+            deleteSession(sessionId)
+            message.success('删除成功')
+            await fetchTaskList({ force: true })
+          } else {
+            message.error(response.msg || '删除失败')
+          }
+        } catch (error) {
+          console.error('删除会话失败:', error)
+          message.error('删除失败，请重试')
+        }
+      },
     })
   }
 

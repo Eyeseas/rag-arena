@@ -387,3 +387,17 @@ export async function renameConversation(
 
   return response
 }
+
+export async function deleteConversation(
+  userId: string,
+  sessionId: string
+): Promise<{ code: number; msg: string; data: boolean }> {
+  const { get } = await import('@/lib/request')
+
+  const response = await get<{ code: number; msg: string; data: boolean }>('/api/conv/del', {
+    params: { sessionId },
+    headers: { userId },
+  })
+
+  return response
+}
