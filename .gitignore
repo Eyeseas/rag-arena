@@ -31,3 +31,4 @@ dist-ssr
 .cursor/
 .claude/
 .ace-tool/
+.sisyphus/
