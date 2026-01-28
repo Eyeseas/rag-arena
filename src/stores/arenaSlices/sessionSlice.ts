@@ -157,12 +157,10 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
                 ? {
                     ...s,
                     question: historyData.question || '',
-                    title: historyData.question ? (historyData.question.length > 24 ? `${historyData.question.slice(0, 24)}…` : historyData.question) : s.title,
                     answers,
                     priIdMapping,
                     votedAnswerId: votedAnswer?.id || null,
                     serverQuestionId: historyData.sessionId,
-                    updatedAt: Date.now(),
                   }
                 : s
             ),

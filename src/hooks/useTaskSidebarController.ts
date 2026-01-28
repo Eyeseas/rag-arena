@@ -205,9 +205,24 @@ export function useTaskSidebarController({
     setEditValue(currentTitle)
   }
 
-  const handleFinishEditSession = () => {
+  const handleFinishEditSession = async () => {
     if (editingSessionId && editValue.trim()) {
-      renameSession(editingSessionId, editValue.trim())
+      const newTitle = editValue.trim()
+      const userId = getUserId()
+      
+      try {
+        const response = await arenaApi.renameConversation(userId, editingSessionId, newTitle)
+        if ((response.code === 0 || response.code === 200) && response.data) {
+          renameSession(editingSessionId, newTitle)
+          message.success('重命名成功')
+          await fetchTaskList({ force: true })
+        } else {
+          message.error(response.msg || '重命名失败')
+        }
+      } catch (error) {
+        console.error('重命名会话失败:', error)
+        message.error('重命名失败，请重试')
+      }
     }
     setEditingSessionId(null)
     setEditValue('')

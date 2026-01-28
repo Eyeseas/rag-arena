@@ -372,3 +372,18 @@ export async function chatPrivate(
     throw error
   }
 }
+
+export async function renameConversation(
+  userId: string,
+  sessionId: string,
+  title: string
+): Promise<{ code: number; msg: string; data: boolean }> {
+  const { get } = await import('@/lib/request')
+
+  const response = await get<{ code: number; msg: string; data: boolean }>('/api/conv/rename', {
+    params: { sessionId, title },
+    headers: { userId },
+  })
+
+  return response
+}
