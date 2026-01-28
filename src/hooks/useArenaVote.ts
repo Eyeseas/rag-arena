@@ -17,6 +17,14 @@ const providerIdToMaskCode: Record<string, string> = Object.fromEntries(
   Object.entries(maskCodeToProviderId).map(([k, v]) => [v, k])
 )
 
+const feedbackReasonLabels: Record<string, string> = {
+  SLOW_RESPONSE: '响应速度太慢',
+  IRRELEVANT_DIALOGUE: '存在无关话单',
+  HALLUCINATION: '存在编造内容',
+  CITATION_SUMMARY_INACCURATE: '摘要不够准确',
+  KEY_CONTENT_LOCATE_INACCURATE: '关键内容定位不够准确',
+}
+
 /**
  * 投票流程 Hook 返回值
  */
@@ -76,7 +84,7 @@ export interface UseArenaVoteReturn {
  */
 export function useArenaVote(): UseArenaVoteReturn {
   const { setVotedAnswerId } = useArenaStore()
-  const { questionId, answers, votedAnswerId, isLoading, activeSession } = useArenaSession()
+  const { answers, votedAnswerId, isLoading, activeSession } = useArenaSession()
 
   const [votingAnswerId, setVotingAnswerId] = useState<string | null>(null)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
@@ -122,23 +130,37 @@ export function useArenaVote(): UseArenaVoteReturn {
 
   const handleSubmitFeedback = useCallback(
     async (feedbackData: VoteFeedbackData) => {
-      if (!questionId || !feedbackAnswerId) return
+      if (!feedbackAnswerId) return
 
-      const reasons = [...feedbackData.answerIssues, ...feedbackData.citationIssues]
+      const answer = selectAnswerById(answers, feedbackAnswerId)
+      if (!answer) return
+
+      const maskCode = providerIdToMaskCode[answer.providerId]
+      const priIdMapping = activeSession?.priIdMapping
+      const priId = priIdMapping?.[maskCode]
+
+      if (!priId) {
+        message.error('反馈信息不完整，请刷新页面重试')
+        return
+      }
+
+      const comments = [...feedbackData.answerIssues, ...feedbackData.citationIssues]
+        .map(reason => feedbackReasonLabels[reason] || reason)
 
       try {
-        await arenaApi.submitVoteFeedback({
-          questionId,
-          answerId: feedbackAnswerId,
-          reasons,
-        })
-        message.success('反馈提交成功！')
+        const response = await arenaApi.submitFeedback(priId, comments)
+        if (response.code === 0 || response.code === 200) {
+          message.success('反馈提交成功！')
+        } else {
+          message.error(response.msg || '反馈提交失败')
+          throw new Error(response.msg)
+        }
       } catch (error) {
         message.error(error instanceof Error ? error.message : '反馈提交失败，请重试')
         throw error
       }
     },
-    [questionId, feedbackAnswerId]
+    [feedbackAnswerId, answers, activeSession]
   )
 
   const closeFeedbackModal = useCallback(() => {

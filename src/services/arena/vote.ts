@@ -87,3 +87,19 @@ export async function getStats(): Promise<StatsResponse> {
     throw error
   }
 }
+
+export async function submitFeedback(
+  priId: string,
+  comments: string[]
+): Promise<{ code: number; msg: string; data: boolean }> {
+  try {
+    const response = await post<{ code: number; msg: string; data: boolean }>('/api/others/feedback', {
+      priId,
+      comments,
+    })
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] submitFeedback failed:', error)
+    throw error
+  }
+}
