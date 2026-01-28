@@ -147,7 +147,22 @@ export function useTaskSidebarController({
       okText: '删除',
       okButtonProps: { danger: true },
       cancelText: '取消',
-      onOk: () => deleteTask(taskId),
+      onOk: async () => {
+        const userId = getUserId()
+        try {
+          const response = await arenaApi.deleteTask(userId, taskId)
+          if ((response.code === 0 || response.code === 200) && response.data) {
+            deleteTask(taskId)
+            message.success('删除成功')
+            await fetchTaskList({ force: true })
+          } else {
+            message.error(response.msg || '删除失败')
+          }
+        } catch (error) {
+          console.error('删除任务失败:', error)
+          message.error('删除失败，请重试')
+        }
+      },
     })
   }
 
@@ -158,9 +173,24 @@ export function useTaskSidebarController({
     setEditValue(currentTitle)
   }
 
-  const handleFinishEditTask = () => {
+  const handleFinishEditTask = async () => {
     if (editingTaskId && editValue.trim()) {
-      renameTask(editingTaskId, editValue.trim())
+      const newTitle = editValue.trim()
+      const userId = getUserId()
+      
+      try {
+        const response = await arenaApi.renameTask(userId, editingTaskId, newTitle)
+        if ((response.code === 0 || response.code === 200) && response.data) {
+          renameTask(editingTaskId, newTitle)
+          message.success('重命名成功')
+          await fetchTaskList({ force: true })
+        } else {
+          message.error(response.msg || '重命名失败')
+        }
+      } catch (error) {
+        console.error('重命名任务失败:', error)
+        message.error('重命名失败，请重试')
+      }
     }
     setEditingTaskId(null)
     setEditValue('')

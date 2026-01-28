@@ -25,14 +25,14 @@ export { maskCodeToProviderId, orderedMaskCodes } from './utils'
 // 导出各模块函数
 export { submitQuestion, submitQuestionStream } from './question'
 export { submitVote, submitVoteFeedback, getStats, submitFeedback } from './vote'
-export { getTaskList, addTask } from './task'
+export { getTaskList, addTask, deleteTask, renameTask } from './task'
 export { createConversation, chatConversationMultiModel, chatConversation, chatPrivate, getConversationHistory, renameConversation, deleteConversation } from './conversation'
 export { getCitationDetail } from './citation'
 
 // 导入函数用于构建 arenaApi 对象
 import { submitQuestion, submitQuestionStream } from './question'
 import { submitVote, submitVoteFeedback, getStats, submitFeedback } from './vote'
-import { getTaskList, addTask } from './task'
+import { getTaskList, addTask, deleteTask, renameTask } from './task'
 import { createConversation, chatConversationMultiModel, chatConversation, chatPrivate, getConversationHistory, renameConversation, deleteConversation } from './conversation'
 import { getCitationDetail } from './citation'
 
@@ -53,6 +53,8 @@ export const arenaApi = {
   chatConversationMultiModel,
   chatPrivate,
   addTask,
+  deleteTask,
+  renameTask,
   getConversationHistory,
   renameConversation,
   deleteConversation,

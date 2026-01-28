@@ -93,3 +93,91 @@ export async function addTask(
     throw error
   }
 }
+
+/**
+ * 删除任务
+ *
+ * @param userId 用户ID
+ * @param code 任务code
+ * @returns 删除结果
+ *
+ * @example
+ * ```ts
+ * const response = await deleteTask('user_123', 'task_code_1')
+ * console.log(response.data) // true
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * GET /task/del
+ * Headers: { userId: string }
+ * Query: { code: string }
+ *
+ * 通过 Vite proxy 代理到: http://localhost:8901/task/del
+ * 前端调用路径: /api/task/del (会被 proxy 转发)
+ */
+export async function deleteTask(
+  userId: string,
+  code: string
+): Promise<{ code: number; msg: string; data: boolean }> {
+  console.log('deleteTask', userId, code)
+  try {
+    const response = await get<{ code: number; msg: string; data: boolean }>('/api/task/del', {
+      params: { code },
+      headers: {
+        userId,
+      },
+    })
+
+    console.log('[ArenaApi] deleteTask response:', response)
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] deleteTask failed:', error)
+    throw error
+  }
+}
+
+/**
+ * 重命名任务
+ *
+ * @param userId 用户ID
+ * @param code 任务code
+ * @param title 新标题
+ * @returns 重命名结果
+ *
+ * @example
+ * ```ts
+ * const response = await renameTask('user_123', 'task_code_1', '新任务名称')
+ * console.log(response.data) // true
+ * ```
+ *
+ * @remarks
+ * 真实接口对接时，需要调用:
+ * GET /task/rename
+ * Headers: { userId: string }
+ * Query: { code: string, title: string }
+ *
+ * 通过 Vite proxy 代理到: http://localhost:8901/task/rename
+ * 前端调用路径: /api/task/rename (会被 proxy 转发)
+ */
+export async function renameTask(
+  userId: string,
+  code: string,
+  title: string
+): Promise<{ code: number; msg: string; data: boolean }> {
+  console.log('renameTask', userId, code, title)
+  try {
+    const response = await get<{ code: number; msg: string; data: boolean }>('/api/task/rename', {
+      params: { code, title },
+      headers: {
+        userId,
+      },
+    })
+
+    console.log('[ArenaApi] renameTask response:', response)
+    return response
+  } catch (error) {
+    console.error('[ArenaApi] renameTask failed:', error)
+    throw error
+  }
+}
