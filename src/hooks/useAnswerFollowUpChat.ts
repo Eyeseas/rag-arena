@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FollowUpChatMessage } from '@/types/arenaUi'
-import type { Answer } from '@/types/arena'
+import type { Answer, Citation } from '@/types/arena'
 import { arenaApi } from '@/services/arena'
 import { getUserId } from '@/lib/userId'
 
@@ -94,8 +94,17 @@ export function useAnswerFollowUpChat({
               )
             )
           },
-          onDone: () => {
+          onDone: (citations?: Citation[]) => {
             setChatLoading(false)
+            if (citations && citations.length > 0) {
+              setChatMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageIdRef.current
+                    ? { ...msg, citations }
+                    : msg
+                )
+              )
+            }
           },
           onError: (error: Error) => {
             console.error('[useAnswerFollowUpChat] Error:', error)

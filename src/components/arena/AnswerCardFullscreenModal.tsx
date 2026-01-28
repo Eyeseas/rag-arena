@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
-import { Alert, Button, Input, Modal, Spin } from 'antd'
-import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, Button, Collapse, Input, Modal, Spin } from 'antd'
+import { RobotOutlined, SendOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
 import { Think } from '@ant-design/x'
 
@@ -44,6 +44,9 @@ export function AnswerCardFullscreenModal({
   const hasCitations = answer.citations && answer.citations.length > 0
   const hasError = Boolean(answer.error)
   const hasContent = answer.content.length > 0
+
+  // 初始回答的参考来源折叠状态（默认展开）
+  const [initialCitationsExpanded, setInitialCitationsExpanded] = useState<string[]>(['initial'])
 
   // 对话区域自动滚动到底部
   const chatContentRef = useRef<HTMLDivElement>(null)
@@ -122,22 +125,35 @@ export function AnswerCardFullscreenModal({
           </div>
 
           {hasCitations && (
-            <div className="pt-3 border-t border-slate-200">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-slate-700">参考来源</span>
-                <span className="text-xs text-slate-500">({answer.citations!.length})</span>
-              </div>
-              <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
-                {answer.citations!.map((citation, index) => (
-                  <CitationCard
-                    key={citation.id}
-                    citation={citation}
-                    index={index}
-                    onClick={onCitationClick}
-                  />
-                ))}
-              </div>
-            </div>
+            <Collapse
+              activeKey={initialCitationsExpanded}
+              onChange={(keys) => setInitialCitationsExpanded(keys as string[])}
+              className="!border-0 !bg-transparent"
+              items={[
+                {
+                  key: 'initial',
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <FileTextOutlined className="text-teal-500" />
+                      <span className="text-sm font-medium text-slate-700">参考来源</span>
+                      <span className="text-xs text-slate-500">({answer.citations!.length})</span>
+                    </div>
+                  ),
+                  children: (
+                    <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
+                      {answer.citations!.map((citation, index) => (
+                        <CitationCard
+                          key={citation.id}
+                          citation={citation}
+                          index={index}
+                          onClick={onCitationClick}
+                        />
+                      ))}
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
 
           {chatMessages.map((msg) => (
@@ -172,6 +188,36 @@ export function AnswerCardFullscreenModal({
                   think: ({ children }) => <Think title="深度思考">{children}</Think>,
                 }}
               />
+              {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
+                <Collapse
+                  defaultActiveKey={[]}
+                  className="!border-0 !bg-transparent mt-4"
+                  items={[
+                    {
+                      key: msg.id,
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <FileTextOutlined className="text-teal-500" />
+                          <span className="text-sm font-medium text-slate-700">参考来源</span>
+                          <span className="text-xs text-slate-500">({msg.citations.length})</span>
+                        </div>
+                      ),
+                      children: (
+                        <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
+                          {msg.citations.map((citation, index) => (
+                            <CitationCard
+                              key={citation.id}
+                              citation={citation}
+                              index={index}
+                              onClick={onCitationClick}
+                            />
+                          ))}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
+              )}
             </div>
           ))}
 

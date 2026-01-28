@@ -10,4 +10,6 @@ export interface FollowUpChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
+  /** 追问回答的参考来源（仅 assistant 消息有） */
+  citations?: import('./arena').Citation[]
 }
