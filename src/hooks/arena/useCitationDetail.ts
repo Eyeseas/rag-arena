@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import type { Citation, CitationDetail } from '@/types/arena'
 import { arenaApi } from '@/services/arena'
 
-export function useCitationDetail(open: boolean, citation: Citation | null) {
+export function useCitationDetail(open: boolean, citation: Citation | null, priId: string | null) {
   const [loading, setLoading] = useState(false)
   const [detail, setDetail] = useState<CitationDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (open && citation) {
+    if (open && citation && priId) {
       // Defer state updates to avoid setState-in-effect lint rule.
       queueMicrotask(() => {
         setLoading(true)
@@ -19,7 +19,7 @@ export function useCitationDetail(open: boolean, citation: Citation | null) {
       let cancelled = false
 
       arenaApi
-        .getCitationDetail(citation.id)
+        .getCitationDetail(citation.id, priId)
         .then((data) => {
           if (cancelled) return
           setDetail(data)
@@ -42,7 +42,7 @@ export function useCitationDetail(open: boolean, citation: Citation | null) {
         setError(null)
       })
     }
-  }, [open, citation])
+  }, [open, citation, priId])
 
   return { loading, detail, error }
 }

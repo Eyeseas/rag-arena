@@ -60,7 +60,7 @@ export function CitationAnalysisPanel({ summary, keyElements }: CitationAnalysis
                   </div>
                 </div>
               )}
-              {keyElements.oragnizations && keyElements.oragnizations.length > 0 && (
+              {keyElements.organizations && keyElements.organizations.length > 0 && (
                 <div className="group p-3.5 bg-gradient-to-br from-cyan-50 to-cyan-50/50 rounded-lg border border-cyan-200/60 hover:border-cyan-300 hover:shadow-sm transition-all duration-200 cursor-pointer">
                   <div className="flex items-center gap-2 mb-2.5">
                     <div className="w-7 h-7 rounded-md bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-sm">
@@ -70,11 +70,11 @@ export function CitationAnalysisPanel({ summary, keyElements }: CitationAnalysis
                       组织
                     </Text>
                     <span className="ml-auto text-xs text-slate-500 bg-white/60 px-2 py-0.5 rounded-full">
-                      {keyElements.oragnizations.length}
+                      {keyElements.organizations.length}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {keyElements.oragnizations.map((org, i) => (
+                    {keyElements.organizations.map((org, i) => (
                       <Tag
                         key={i}
                         color="cyan"

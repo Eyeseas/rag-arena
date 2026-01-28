@@ -103,7 +103,7 @@ export interface CitationDetail {
     /** 人物数组 */
     persons?: string[]
     /** 组织数组 */
-    oragnizations?: string[]
+    organizations?: string[]
     /** 事件数组 */
     events?: string[]
     /** 其余元素数组 */

@@ -18,12 +18,14 @@ interface CitationDetailDrawerProps {
   open: boolean
   /** 引用数据 */
   citation: Citation | null
+  /** 私有ID（用于API调用） */
+  priId: string | null
   /** 关闭回调 */
   onClose: () => void
 }
 
-export function CitationDetailDrawer({ open, citation, onClose }: CitationDetailDrawerProps) {
-  const { loading, detail, error } = useCitationDetail(open, citation)
+export function CitationDetailDrawer({ open, citation, priId, onClose }: CitationDetailDrawerProps) {
+  const { loading, detail, error } = useCitationDetail(open, citation, priId)
   const totalDuration = citation?.duration || 0
   const audioState = useCitationAudio(totalDuration)
 

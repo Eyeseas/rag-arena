@@ -257,6 +257,7 @@ export const AnswerCard = memo(function AnswerCard({
         <CitationDetailDrawer
           open={citationDrawerOpen}
           citation={selectedCitation}
+          priId={answer.id}
           onClose={handleCloseCitationDrawer}
         />
       </Suspense>
