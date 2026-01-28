@@ -13,7 +13,6 @@ import type { DateRange } from '@/types/common'
 import { useDeltaBuffer } from './useDeltaBuffer'
 
 import { getUserId } from './arenaQuestion/userId'
-import { runLegacyArenaQuestionStream } from './arenaQuestion/legacyFlow'
 import { runConversationMultiModelStream } from './arenaQuestion/conversationFlow'
 
 /**
@@ -69,6 +68,7 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
   const startSessionWithQuestion = useArenaStore((s) => s.startSessionWithQuestion)
   const setServerQuestionId = useArenaStore((s) => s.setServerQuestionId)
   const setSessionConversationInfo = useArenaStore((s) => s.setSessionConversationInfo)
+  const createTask = useArenaStore((s) => s.createTask)
 
   // 使用 delta 缓冲区优化性能
   const { addDelta, flush, clear } = useDeltaBuffer((buffer) => {
@@ -82,35 +82,27 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
       const trimmed = question.trim()
       if (!trimmed) return
 
+      // 如果没有活动任务，从任务列表获取第一个任务的 id
+      let taskId = activeTaskId
+      if (!taskId) {
+        const tasks = useArenaStore.getState().tasks
+        if (tasks.length > 0) {
+          taskId = tasks[0].id
+        } else {
+          taskId = createTask('默认任务')
+        }
+      }
+
       const sessionId = await startSessionWithQuestion(trimmed)
       setLoading(true)
       clear()
 
-      // If tasks are available, use the conversation-based streaming flow.
-      // This mirrors the previous logic that lived inside QuestionInput.
-      const shouldUseConversation = Boolean(activeTaskId)
-
       try {
-        if (!shouldUseConversation) {
-          await runLegacyArenaQuestionStream({
-            question: trimmed,
-            dateRange,
-            setServerQuestionId,
-            setAnswers,
-            addDelta,
-            flush,
-            finalizeAnswer,
-            setAnswerError,
-          })
-          return
-        }
-
-        // Conversation stream: /api/conv/create + /api/conv/chat (multi-model)
         await runConversationMultiModelStream({
           question: trimmed,
           dateRange,
           userId: getUserId(),
-          activeTaskId,
+          activeTaskId: taskId,
           activeSessionId: sessionId,
           getSessionById: (id) => selectSessionById(useArenaStore.getState(), id) || undefined,
           setSessionConversationInfo,
@@ -124,17 +116,13 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
       } catch (error) {
         message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
         setServerQuestionId(null)
-
-        // Legacy path cleared answer cards; conversation path kept them.
-        if (!shouldUseConversation) {
-          setAnswers([])
-        }
       } finally {
         setLoading(false)
       }
     },
     [
       activeTaskId,
+      createTask,
       addDelta,
       startSessionWithQuestion,
       setLoading,
