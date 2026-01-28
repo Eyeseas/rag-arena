@@ -141,8 +141,13 @@ export async function chatConversationMultiModel(
           if (data.choices && data.choices.length > 0) {
             const choice = data.choices[0]
             if (choice.delta?.content) {
-              // 保留 <think> 标签内容，由前端 Think 组件渲染
-              handlers.onDelta(maskCode, choice.delta.content)
+              // 保留 <think> 标签内容,由前端 Think 组件渲染
+              // 将各种形式的换行符统一替换为 \n，避免显示为字面文本
+              const normalizedContent = choice.delta.content
+                .replace(/\r\n/g, '\n')           // 处理真实的回车换行符
+                .replace(/\/r\/n/g, '\n')         // 处理字面字符串 '/r/n'
+                .replace(/\\r\\n/g, '\n')         // 处理转义的字符串 '\r\n'
+              handlers.onDelta(maskCode, normalizedContent)
             }
 
             // 如果完成，调用 onDone
@@ -241,7 +246,8 @@ export async function chatConversation(
           const choice = data.choices[0]
           if (choice.delta?.content) {
             // 传递 maskCode 和 maskName 以便创建 answer 时使用
-            handlers.onDelta(currentSessionId, choice.delta.content, currentPrivateId, data.maskCode, data.maskName)
+            const normalizedContent = choice.delta.content.replace(/\r\n/g, '\n')
+            handlers.onDelta(currentSessionId, normalizedContent, currentPrivateId, data.maskCode, data.maskName)
           }
 
           // 如果完成，调用 onDone
@@ -353,7 +359,8 @@ export async function chatPrivate(
         if (data.choices && data.choices.length > 0) {
           const choice = data.choices[0]
           if (choice.delta?.content) {
-            handlers.onDelta(choice.delta.content)
+            const normalizedContent = choice.delta.content.replace(/\r\n/g, '\n')
+            handlers.onDelta(normalizedContent)
           }
 
           // 如果完成，调用 onDone
