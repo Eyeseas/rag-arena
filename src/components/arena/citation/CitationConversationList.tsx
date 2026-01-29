@@ -1,5 +1,5 @@
 import { Typography, Tooltip, Empty } from 'antd'
-import { FileTextOutlined, PhoneOutlined, CustomerServiceOutlined } from '@ant-design/icons'
+import { FileTextOutlined, PhoneOutlined, CustomerServiceOutlined ,UserOutlined} from '@ant-design/icons'
 import { formatTimePoint } from './utils'
 
 const { Title } = Typography
@@ -26,7 +26,7 @@ export function CitationConversationList({ content }: CitationConversationListPr
     <div className="flex-1 flex flex-col min-w-0">
       <Title level={5} className="mb-3 flex items-center gap-2 flex-shrink-0">
         <FileTextOutlined />
-        对话内容
+        原始材料
       </Title>
       <div className="flex-1 overflow-y-auto pr-2">
         {contentItems.length > 0 ? (
@@ -63,7 +63,7 @@ export function CitationConversationList({ content }: CitationConversationListPr
                           : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
                       }`}
                     >
-                      {isCaller ? <PhoneOutlined /> : <CustomerServiceOutlined />}
+                      <UserOutlined />
                     </div>
                     {/* 时间小标识 - 统一放在头像下方 */}
                     {item.time !== undefined && (
