@@ -35,7 +35,7 @@ export function CitationDetailDrawer({ open, citation, priId, onClose }: Citatio
         </div>
       }
       placement="right"
-      width={900}
+      size={1600}
       open={open}
       onClose={onClose}
       zIndex={2000}
