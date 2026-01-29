@@ -1,11 +1,9 @@
 // CitationDetailDrawer - 引用详情抽屉组件
 
-import { useEffect } from 'react'
 import { Drawer, Spin, Empty, Alert } from 'antd'
 import { FileTextOutlined } from '@ant-design/icons'
 import type { Citation } from '@/types/arena'
 import { useCitationDetail } from '@/hooks/arena/useCitationDetail'
-import { useCitationAudio } from '@/hooks/arena/useCitationAudio'
 import {
   CitationHeader,
   CitationAudioPlayer,
@@ -27,14 +25,6 @@ interface CitationDetailDrawerProps {
 export function CitationDetailDrawer({ open, citation, priId, onClose }: CitationDetailDrawerProps) {
   const { loading, detail, error } = useCitationDetail(open, citation, priId)
   const totalDuration = citation?.duration || 0
-  const audioState = useCitationAudio(totalDuration)
-
-  // Reset audio when closed
-  useEffect(() => {
-    if (!open) {
-      audioState.reset()
-    }
-  }, [open, audioState])
 
   return (
     <Drawer
@@ -75,7 +65,7 @@ export function CitationDetailDrawer({ open, citation, priId, onClose }: Citatio
             <CitationAudioPlayer
               file={detail.file}
               totalDuration={totalDuration}
-              audioState={audioState}
+              open={open}
             />
           )}
 
