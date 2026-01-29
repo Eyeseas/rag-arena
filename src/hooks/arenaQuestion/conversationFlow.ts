@@ -14,7 +14,7 @@ function buildInitialAnswersFromPriIdMapping(priIdMapping: Record<string, string
     .map((maskCode) => {
       const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
       return {
-        id: providerId,
+        id: priIdMapping[maskCode],
         providerId,
         content: '',
       }
@@ -119,19 +119,19 @@ export async function runConversationMultiModelStream(params: {
 
   await arenaApi.chatConversationMultiModel(userId, request, priIdMapping, {
     onDelta: (maskCode, content) => {
-      const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-      addDelta(providerId, content)
+      const priId = priIdMapping[maskCode]
+      if (priId) addDelta(priId, content)
     },
     onDone: (maskCode, citations) => {
       flush()
-      const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-      finalizeAnswer(providerId, { citations })
+      const priId = priIdMapping[maskCode]
+      if (priId) finalizeAnswer(priId, { citations })
     },
     onError: (maskCode, error) => {
       flush()
       message.error(`模型 ${maskCode} 获取回答失败: ${error.message}`)
-      const providerId = maskCodeToProviderId[maskCode] || maskCode.charAt(0)
-      setAnswerError(providerId, error.message)
+      const priId = priIdMapping[maskCode]
+      if (priId) setAnswerError(priId, error.message)
     },
   })
 }
