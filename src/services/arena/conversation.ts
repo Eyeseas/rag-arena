@@ -401,6 +401,12 @@ export async function chatPrivate(
         handlers.onError(error instanceof Error ? error : new Error('Failed to parse SSE event'))
       }
     })
+
+    // 如果流结束时仍在等待 citations（即收到 finish_reason 后没有后续消息），
+    // 确保调用 onDone 以清除 loading 状态
+    if (waitingForCitations) {
+      handlers.onDone(undefined)
+    }
   } catch (error) {
     console.error('[ArenaApi] chatPrivate failed:', error)
     handlers.onError(error instanceof Error ? error : new Error('Unknown error'))
