@@ -18,6 +18,7 @@
  */
 
 import axios, { type AxiosRequestConfig } from 'axios'
+import { getTssotoken } from '@/stores/auth'
 
 /**
  * 获取 API 基础地址
@@ -58,6 +59,12 @@ request.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  
+  const tssotoken = getTssotoken()
+  if (tssotoken) {
+    config.headers.tssotoken = tssotoken
+  }
+  
   return config
 })
 

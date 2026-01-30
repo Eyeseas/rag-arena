@@ -3,9 +3,10 @@
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, Spin } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import type { QueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/hooks/useAuth'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -16,6 +17,18 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootComponent() {
+  const { isLoading, isRedirecting } = useAuth()
+
+  if (isLoading || isRedirecting) {
+    return (
+      <ConfigProvider locale={zhCN}>
+        <div className="min-h-screen flex items-center justify-center">
+          <Spin size="large" tip={isRedirecting ? '正在跳转登录...' : '验证中...'} />
+        </div>
+      </ConfigProvider>
+    )
+  }
+
   return (
     <ConfigProvider
       locale={zhCN}

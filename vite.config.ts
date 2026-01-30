@@ -107,11 +107,15 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: shouldEnableProxy
         ? {
-            // 代理所有 /api 开头的请求到后端服务器
             '/api': {
               target: proxyTarget,
               changeOrigin: true,
               rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+            '/sso': {
+              target: "http://localhost:3000",
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/sso/, ''),
             },
           }
         : undefined,
