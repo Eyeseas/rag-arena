@@ -4,7 +4,7 @@
 
 const THINK_OPEN = '<think>'
 const THINK_CLOSE = '</think>'
-const MAX_CHINESE_CHARS_DEFAULT = 2048
+const MAX_CHINESE_CHARS_DEFAULT = 1200
 const CHINESE_CHAR_REGEX = /[\u4e00-\u9fa5]/
 
 type Part = { type: 'think' | 'text'; content: string }
