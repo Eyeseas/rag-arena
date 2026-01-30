@@ -21,8 +21,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1(antd@6.1.1(date-fns@4.1.0)(luxon@3.7.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@ant-design/x-markdown':
-        specifier: ^2.1.1
-        version: 2.1.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^2.2.0
+        version: 2.2.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -355,8 +355,8 @@ packages:
       react: ^0.14.0 || ^15.0.1 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^0.14.0 || ^15.0.1 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@ant-design/x-markdown@2.1.1':
-    resolution: {integrity: sha512-WUR1um6cz+fNkazLjm04X19OHyKBs2CNhYAY339sAC+bhSzQy6j/TbCsj8iaIODsv5137RxP+/rb2+gf6cX0rA==}
+  '@ant-design/x-markdown@2.2.0':
+    resolution: {integrity: sha512-Ri8eOjjzxKX4eElM1tayxsJRMVBwcoMTXSg6re3uVROtSrkfbXe+3wHDJHN/QARzpLpe3Cjq1o2z1/wbPSOY7w==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -4929,9 +4929,9 @@ snapshots:
       react-dom: 19.2.3(react@19.2.3)
       throttle-debounce: 5.0.2
 
-  '@ant-design/x-markdown@2.1.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@ant-design/x-markdown@2.2.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      classnames: 2.5.1
+      clsx: 2.1.1
       dompurify: 3.3.1
       html-react-parser: 5.2.11(@types/react@19.2.7)(react@19.2.3)
       katex: 0.16.27
