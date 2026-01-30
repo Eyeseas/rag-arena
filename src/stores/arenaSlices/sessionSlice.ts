@@ -42,6 +42,7 @@ function convertHistoryToAnswers(historyData: HistoryChatVO): { answers: Answer[
       providerId,
       citations,
       liked,
+      isComplete: true,
     } as Answer & { liked?: boolean })
   }
   

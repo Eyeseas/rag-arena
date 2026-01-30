@@ -201,10 +201,16 @@ export const AnswerCard = memo(function AnswerCard({
           />
         )}
         {!hasContent && !hasError && (
-          <div className="flex items-center gap-2 text-slate-600 text-sm">
-            <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-            正在生成回答...
-          </div>
+          answer.isComplete ? (
+            <div className="text-slate-500 text-sm">
+              该模型未返回回答
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-600 text-sm">
+              <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+              正在生成回答...
+            </div>
+          )
         )}
         {hasContent && (
           <XMarkdown
