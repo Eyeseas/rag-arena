@@ -6,6 +6,7 @@
 
 import { Button, Typography } from 'antd'
 import { TrophyOutlined, ThunderboltOutlined, HistoryOutlined } from '@ant-design/icons'
+import { UserAvatar } from './UserAvatar'
 
 const { Title } = Typography
 
@@ -28,7 +29,6 @@ export function ArenaHeader({ isActive, isLoading, onOpenHistory }: ArenaHeaderP
         isActive ? 'mb-6' : 'mb-8'
       }`}
     >
-      {/* 移动端侧栏按钮 */}
       <Button
         className="lg:hidden absolute left-0 top-1/2 -translate-y-1/2"
         icon={<HistoryOutlined />}
@@ -37,6 +37,10 @@ export function ArenaHeader({ isActive, isLoading, onOpenHistory }: ArenaHeaderP
       >
         历史
       </Button>
+
+      <div className="absolute right-0 top-1/2 -translate-y-1/2">
+        <UserAvatar />
+      </div>
 
       {/* Logo 和标题 - 水平排列 */}
       <div
