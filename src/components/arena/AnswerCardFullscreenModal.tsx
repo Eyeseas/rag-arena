@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert, Button, Collapse, Input, Modal, Spin } from 'antd'
-import { RobotOutlined, SendOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons'
+import { RobotOutlined, SendOutlined, UserOutlined, FileTextOutlined, MessageOutlined } from '@ant-design/icons'
 import { XMarkdown } from '@ant-design/x-markdown'
 import { Think } from '@ant-design/x'
 
-import type { Answer, Citation } from '@/types/arena'
+import type { Answer, Citation, HistoryMessage } from '@/types/arena'
 import type { FollowUpChatMessage } from '@/types/arenaUi'
 
 import type { ProviderVisualConfig } from './AnswerCardProviderConfig'
@@ -27,6 +27,93 @@ interface AnswerCardFullscreenModalProps {
   onCitationClick: (citation: Citation) => void
 }
 
+function HistoryMessageBlock({
+  message,
+  index,
+  config,
+  onCitationClick,
+}: {
+  message: HistoryMessage
+  index: number
+  config: ProviderVisualConfig
+  onCitationClick: (citation: Citation) => void
+}) {
+  const [citationsExpanded, setCitationsExpanded] = useState<string[]>(index === 0 ? ['citations'] : [])
+  const hasCitations = message.citations && message.citations.length > 0
+
+  return (
+    <div className="p-5 bg-gradient-to-br from-slate-50 to-white rounded-md border border-slate-200">
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className={
+            `w-8 h-8 rounded bg-gradient-to-br ${config.gradient} ` +
+            'flex items-center justify-center shadow-sm text-white text-sm'
+          }
+        >
+          <RobotOutlined />
+        </div>
+        <span className="text-sm font-medium text-slate-600">
+          {index === 0 ? '初始回答' : `追问回复 #${index}`}
+        </span>
+      </div>
+
+      {index > 0 && message.question && (
+        <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-100">
+          <div className="flex items-center gap-2 mb-1">
+            <UserOutlined className="text-blue-500 text-xs" />
+            <span className="text-xs font-medium text-blue-600">追问问题</span>
+          </div>
+          <p className="text-sm text-slate-700">{message.question}</p>
+        </div>
+      )}
+
+      {message.content ? (
+        <XMarkdown
+          className="x-markdown-light prose prose-slate prose-sm max-w-none"
+          content={message.content}
+          components={{
+            think: ({ children }) => <Think title="深度思考">{children}</Think>,
+          }}
+        />
+      ) : (
+        <div className="text-slate-500 text-sm">该模型未返回回答</div>
+      )}
+
+      {hasCitations && (
+        <Collapse
+          activeKey={citationsExpanded}
+          onChange={(keys) => setCitationsExpanded(keys as string[])}
+          className="!border-0 !bg-transparent mt-4"
+          items={[
+            {
+              key: 'citations',
+              label: (
+                <div className="flex items-center gap-2">
+                  <FileTextOutlined className="text-teal-500" />
+                  <span className="text-sm font-medium text-slate-700">参考来源</span>
+                  <span className="text-xs text-slate-500">({message.citations!.length})</span>
+                </div>
+              ),
+              children: (
+                <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
+                  {message.citations!.map((citation, idx) => (
+                    <CitationCard
+                      key={`${citation.id}-${idx}`}
+                      citation={citation}
+                      index={idx}
+                      onClick={onCitationClick}
+                    />
+                  ))}
+                </div>
+              ),
+            },
+          ]}
+        />
+      )}
+    </div>
+  )
+}
+
 export function AnswerCardFullscreenModal({
   open,
   onClose,
@@ -41,20 +128,18 @@ export function AnswerCardFullscreenModal({
   onKeyDown,
   onCitationClick,
 }: AnswerCardFullscreenModalProps) {
-  const hasCitations = answer.citations && answer.citations.length > 0
   const hasError = Boolean(answer.error)
-  const hasContent = answer.content.length > 0
 
-  // 初始回答的参考来源折叠状态（默认展开）
-  const [initialCitationsExpanded, setInitialCitationsExpanded] = useState<string[]>(['initial'])
+  const historyMessages = answer.historyMessages || []
+  const hasMultipleMessages = historyMessages.length > 1
+  const followUpDisabled = hasAskedFollowUp || hasMultipleMessages
 
-  // 对话区域自动滚动到底部
   const chatContentRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (chatContentRef.current) {
       chatContentRef.current.scrollTop = chatContentRef.current.scrollHeight
     }
-  }, [chatMessages, answer.content])
+  }, [chatMessages, answer.content, historyMessages])
 
   return (
     <Modal
@@ -83,76 +168,50 @@ export function AnswerCardFullscreenModal({
           </div>
           <div className="flex flex-col">
             <span className="text-slate-700 font-semibold">模型 {answer.providerId}</span>
-            <span className="text-xs text-slate-500">全屏查看 · 支持追问</span>
+            <span className="text-xs text-slate-500">
+              {hasMultipleMessages 
+                ? `共 ${historyMessages.length} 条对话记录` 
+                : '全屏查看 · 支持追问'}
+            </span>
           </div>
+          {hasMultipleMessages && (
+            <div className="ml-auto flex items-center gap-1 text-amber-600 bg-amber-50 px-3 py-1 rounded-full text-xs">
+              <MessageOutlined />
+              <span>已有追问记录</span>
+            </div>
+          )}
         </div>
       }
       destroyOnClose
     >
       <div className="flex flex-col h-full">
         <div ref={chatContentRef} className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="p-5 bg-gradient-to-br from-slate-50 to-white rounded-md border border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className={
-                  `w-8 h-8 rounded bg-gradient-to-br ${config.gradient} ` +
-                  'flex items-center justify-center shadow-sm text-white text-sm'
-                }
-              >
-                <RobotOutlined />
-              </div>
-              <span className="text-sm font-medium text-slate-600">初始回答</span>
-            </div>
+          {hasError && (
+            <Alert
+              type="error"
+              showIcon
+              message="生成失败"
+              description={answer.error}
+              className="mb-3 !rounded"
+            />
+          )}
 
-            {hasError && (
-              <Alert
-                type="error"
-                showIcon
-                message="生成失败"
-                description={answer.error}
-                className="mb-3 !rounded"
+          {historyMessages.length > 0 ? (
+            historyMessages.map((msg, index) => (
+              <HistoryMessageBlock
+                key={`history-${index}-${msg.created || index}`}
+                message={msg}
+                index={index}
+                config={config}
+                onCitationClick={onCitationClick}
               />
-            )}
-            {hasContent && (
-              <XMarkdown
-                className="x-markdown-light prose prose-slate prose-sm max-w-none"
-                content={answer.content}
-                components={{
-                  think: ({ children }) => <Think title="深度思考">{children}</Think>,
-                }}
-              />
-            )}
-          </div>
-
-          {hasCitations && (
-            <Collapse
-              activeKey={initialCitationsExpanded}
-              onChange={(keys) => setInitialCitationsExpanded(keys as string[])}
-              className="!border-0 !bg-transparent"
-              items={[
-                {
-                  key: 'initial',
-                  label: (
-                    <div className="flex items-center gap-2">
-                      <FileTextOutlined className="text-teal-500" />
-                      <span className="text-sm font-medium text-slate-700">参考来源</span>
-                      <span className="text-xs text-slate-500">({answer.citations!.length})</span>
-                    </div>
-                  ),
-                  children: (
-                    <div className="bg-slate-50/50 rounded px-3 py-2 border border-slate-100">
-                      {answer.citations!.map((citation, index) => (
-                        <CitationCard
-                          key={citation.id}
-                          citation={citation}
-                          index={index}
-                          onClick={onCitationClick}
-                        />
-                      ))}
-                    </div>
-                  ),
-                },
-              ]}
+            ))
+          ) : (
+            <HistoryMessageBlock
+              message={{ content: answer.content, citations: answer.citations }}
+              index={0}
+              config={config}
+              onCitationClick={onCitationClick}
             />
           )}
 
@@ -235,9 +294,13 @@ export function AnswerCardFullscreenModal({
         </div>
 
         <div className="flex-shrink-0 p-4 border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-          {hasAskedFollowUp && !chatLoading ? (
+          {followUpDisabled && !chatLoading ? (
             <div className="text-center py-3">
-              <p className="text-slate-600 text-sm">您已完成一次追问，每个模型仅支持追问一次</p>
+              <p className="text-slate-600 text-sm">
+                {hasMultipleMessages 
+                  ? '该会话已有追问记录，不支持继续追问' 
+                  : '您已完成一次追问，每个模型仅支持追问一次'}
+              </p>
             </div>
           ) : (
             <>

@@ -13,7 +13,7 @@
 
 import type { StateCreator } from 'zustand'
 import type { ArenaSessionSlice, ArenaState } from '../arenaStoreTypes'
-import type { Answer, HistoryChatVO, ChatRespWithLikedVO } from '@/types/arena'
+import type { Answer, HistoryChatVO, ChatRespWithLikedVO, HistoryMessage } from '@/types/arena'
 import { MAX_SESSIONS_PER_TASK, createEmptySession, createId } from '../arenaHelpers'
 import {
   computeActiveSessionAfterSessionDeletion,
@@ -24,54 +24,49 @@ import {
 import { arenaApi, maskCodeToProviderId } from '@/services/arena'
 import { getUserId } from '@/lib/userId'
 
-/**
- * 将服务端历史记录数据转换为本地 Answer 格式
- *
- * @param historyData - 服务端返回的历史记录数据
- * @returns 转换后的回答数组和 ID 映射
- */
 function convertHistoryToAnswers(historyData: HistoryChatVO): { answers: Answer[], priIdMapping: Record<string, string> } {
   const answers: Answer[] = []
   const priIdMapping: Record<string, string> = {}
   const { chatMap } = historyData
 
-  // 遍历每个模型的聊天记录
   for (const [maskCode, chatList] of Object.entries(chatMap)) {
     if (!chatList || chatList.length === 0) continue
 
-    // 将掩码码转换为显示用的 providerId (A/B/C/D)
     const providerId = maskCodeToProviderId[maskCode] || maskCode
 
-    // 合并所有聊天片段的内容
-    const fullContent = chatList
-      .map((chat: ChatRespWithLikedVO) => {
-        if (!chat.choices || chat.choices.length === 0) return ''
-        return chat.choices.map(c => c.delta?.content || '').join('')
-      })
-      .join('')
+    const historyMessages: HistoryMessage[] = chatList.map((chat: ChatRespWithLikedVO) => {
+      const content = chat.choices?.map(c => c.delta?.content || '').join('') || ''
+      return {
+        content,
+        citations: chat.citations || [],
+        created: chat.created,
+        question: chat.question,
+      }
+    })
 
-    // 获取最后一条记录的元数据
+    const firstMessage = historyMessages[0]
+    const firstContent = firstMessage?.content || ''
+    const firstCitations = firstMessage?.citations || []
+
     const lastChat = chatList[chatList.length - 1]
-    const citations = lastChat?.citations || []
     const liked = chatList.some((chat: ChatRespWithLikedVO) => chat.liked)
     const privateId = lastChat?.privateId
 
-    // 保存 ID 映射
     if (privateId) {
       priIdMapping[maskCode] = privateId
     }
 
     answers.push({
       id: privateId || createId(),
-      content: fullContent,
+      content: firstContent,
       providerId,
-      citations,
+      citations: firstCitations,
       liked,
       isComplete: true,
+      historyMessages,
     } as Answer & { liked?: boolean })
   }
 
-  // 按 A/B/C/D 顺序排序
   const sortedAnswers = answers.sort((a, b) => {
     const order = ['A', 'B', 'C', 'D']
     return order.indexOf(a.providerId) - order.indexOf(b.providerId)

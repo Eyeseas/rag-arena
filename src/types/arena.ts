@@ -122,22 +122,35 @@ export interface CitationDetail {
 // ============================================================================
 
 /**
+ * 单条历史消息
+ * 表示一次问答交互（用户追问 + 模型回复）
+ */
+export interface HistoryMessage {
+  content: string
+  citations?: Citation[]
+  created?: number
+  question?: string
+}
+
+/**
  * 单个回答
  * 表示某个 RAG 模型对问题的回答
  */
 export interface Answer {
   /** 回答唯一标识 */
   id: string
-  /** 回答内容 (支持 Markdown 格式) */
+  /** 回答内容 (支持 Markdown 格式) - 首页卡片展示第一条消息 */
   content: string
   /** 供应商标识 (匿名，如 A/B/C/D) - 用于盲测投票 */
   providerId: string
-  /** 引用摘要列表 (可选) - 回答中引用的文档来源 */
+  /** 引用摘要列表 (可选) - 回答中引用的文档来源，首页展示第一条消息的引用 */
   citations?: Citation[]
   /** 错误信息 (可选) - 当该回答生成失败时的错误提示 */
   error?: string
   /** 是否已完成 (可选) - 用于区分流式生成中和历史会话已完成状态 */
   isComplete?: boolean
+  /** 历史消息列表 (可选) - 包含所有追问历史，全屏查看时展示 */
+  historyMessages?: HistoryMessage[]
 }
 
 // ============================================================================
@@ -402,23 +415,15 @@ export interface ChatChoice {
  * 对应 API: GET /conv/his 返回的单条聊天记录
  */
 export interface ChatRespWithLikedVO {
-  /** 会话ID */
   session_id?: string
-  /** 对象类型 */
   object?: string
-  /** 创建时间戳 */
   created?: number
-  /** 聊天选项列表 */
   choices?: ChatChoice[]
-  /** 引用列表 */
   citations?: Citation[]
-  /** 模型名称 */
   maskName?: string
-  /** 模型代码 */
   maskCode?: string
-  /** 私有ID */
+  question?: string
   privateId?: string
-  /** 是否已点赞 */
   liked?: boolean
 }
 

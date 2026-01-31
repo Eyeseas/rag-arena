@@ -33,6 +33,8 @@ export function useAnswerFollowUpChat({
   const [chatLoading, setChatLoading] = useState(false)
   const [hasAskedFollowUp, setHasAskedFollowUp] = useState(false)
 
+  const hasHistoryFollowUp = (answer.historyMessages?.length || 0) > 1
+
   const abortControllerRef = useRef<AbortController | null>(null)
   const assistantMessageIdRef = useRef<string>('')
 
@@ -45,7 +47,7 @@ export function useAnswerFollowUpChat({
   }, [])
 
   const handleSendMessage = useCallback(async () => {
-    if (!chatInput.trim() || chatLoading || hasAskedFollowUp) return
+    if (!chatInput.trim() || chatLoading || hasAskedFollowUp || hasHistoryFollowUp) return
 
     const content = chatInput.trim()
     const userMessage: FollowUpChatMessage = {
@@ -130,7 +132,7 @@ export function useAnswerFollowUpChat({
       )
       setChatLoading(false)
     }
-  }, [chatInput, chatLoading, hasAskedFollowUp, answer, taskId, sessionId, initialQuestion])
+  }, [chatInput, chatLoading, hasAskedFollowUp, hasHistoryFollowUp, answer, taskId, sessionId, initialQuestion])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
