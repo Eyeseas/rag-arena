@@ -1,3 +1,16 @@
+/**
+ * @file 会话管理 Slice
+ * @description 处理会话的生命周期管理和历史记录加载
+ *
+ * 会话是 Arena 的核心单位，每个会话包含一个问题和多个模型的回答
+ * 支持的操作：
+ * - 创建新会话（带数量限制）
+ * - 删除会话
+ * - 重命名会话
+ * - 设置激活会话
+ * - 加载会话历史记录
+ */
+
 import type { StateCreator } from 'zustand'
 import type { ArenaSessionSlice, ArenaState } from '../arenaStoreTypes'
 import type { Answer, HistoryChatVO, ChatRespWithLikedVO } from '@/types/arena'
@@ -11,31 +24,43 @@ import {
 import { arenaApi, maskCodeToProviderId } from '@/services/arena'
 import { getUserId } from '@/lib/userId'
 
+/**
+ * 将服务端历史记录数据转换为本地 Answer 格式
+ *
+ * @param historyData - 服务端返回的历史记录数据
+ * @returns 转换后的回答数组和 ID 映射
+ */
 function convertHistoryToAnswers(historyData: HistoryChatVO): { answers: Answer[], priIdMapping: Record<string, string> } {
   const answers: Answer[] = []
   const priIdMapping: Record<string, string> = {}
   const { chatMap } = historyData
-  
+
+  // 遍历每个模型的聊天记录
   for (const [maskCode, chatList] of Object.entries(chatMap)) {
     if (!chatList || chatList.length === 0) continue
-    
+
+    // 将掩码码转换为显示用的 providerId (A/B/C/D)
     const providerId = maskCodeToProviderId[maskCode] || maskCode
+
+    // 合并所有聊天片段的内容
     const fullContent = chatList
       .map((chat: ChatRespWithLikedVO) => {
         if (!chat.choices || chat.choices.length === 0) return ''
         return chat.choices.map(c => c.delta?.content || '').join('')
       })
       .join('')
-    
+
+    // 获取最后一条记录的元数据
     const lastChat = chatList[chatList.length - 1]
     const citations = lastChat?.citations || []
     const liked = chatList.some((chat: ChatRespWithLikedVO) => chat.liked)
     const privateId = lastChat?.privateId
-    
+
+    // 保存 ID 映射
     if (privateId) {
       priIdMapping[maskCode] = privateId
     }
-    
+
     answers.push({
       id: privateId || createId(),
       content: fullContent,
@@ -45,27 +70,47 @@ function convertHistoryToAnswers(historyData: HistoryChatVO): { answers: Answer[
       isComplete: true,
     } as Answer & { liked?: boolean })
   }
-  
+
+  // 按 A/B/C/D 顺序排序
   const sortedAnswers = answers.sort((a, b) => {
     const order = ['A', 'B', 'C', 'D']
     return order.indexOf(a.providerId) - order.indexOf(b.providerId)
   })
-  
+
   return { answers: sortedAnswers, priIdMapping }
 }
 
+/**
+ * 创建会话管理 Slice
+ *
+ * @param set - Zustand set 函数
+ * @param get - Zustand get 函数
+ * @returns Session slice 的 action 实现
+ */
 export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSlice> = (set, get) => {
   return {
+    /** 历史记录加载状态 */
     isLoadingHistory: false,
 
+    /**
+     * 在当前任务下创建新会话
+     * - 新会话添加到列表开头
+     * - 自动设为激活会话
+     * - 超出数量限制时移除最旧的会话
+     *
+     * @returns 新创建会话的 ID
+     */
     startNewSession: async () => {
       const { activeTaskId, sessions } = get()
 
+      // 创建空会话
       const newSession = createEmptySession(activeTaskId)
 
+      // 检查当前任务的会话数量
       const taskSessions = getTaskSessions(sessions, activeTaskId)
       let nextSessions = [newSession, ...sessions]
 
+      // 超出限制时移除最旧的会话
       if (taskSessions.length >= MAX_SESSIONS_PER_TASK) {
         const oldestSession = getOldestTaskSession(sessions, activeTaskId)
         if (oldestSession) {
@@ -78,10 +123,17 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
         activeSessionId: newSession.id,
       })
 
+      // 更新任务的更新时间
       touchTask(set, activeTaskId)
       return newSession.id
     },
 
+    /**
+     * 设置当前激活的会话
+     * 同时会自动切换到该会话所属的任务，并展开该任务
+     *
+     * @param sessionId - 会话 ID
+     */
     setActiveSessionId: (sessionId) => {
       const { sessions } = get()
       const session = sessions.find((s) => s.id === sessionId)
@@ -89,11 +141,20 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
 
       set((state) => ({
         activeSessionId: sessionId,
+        // 同时切换到会话所属的任务
         activeTaskId: session.taskId,
+        // 展开该任务
         tasks: state.tasks.map((t) => (t.id === session.taskId ? { ...t, expanded: true } : t)),
       }))
     },
 
+    /**
+     * 删除会话
+     * - 如果删除后任务下没有会话，自动创建新会话
+     * - 智能计算删除后的激活会话
+     *
+     * @param sessionId - 会话 ID
+     */
     deleteSession: (sessionId) => {
       set((state) => {
         const session = state.sessions.find((s) => s.id === sessionId)
@@ -102,6 +163,7 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
         const remaining = state.sessions.filter((s) => s.id !== sessionId)
         const taskSessions = getTaskSessions(remaining, session.taskId)
 
+        // 如果删除后任务下没有会话，创建新会话
         if (taskSessions.length === 0) {
           const newSession = createEmptySession(session.taskId)
           return {
@@ -112,6 +174,7 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
           }
         }
 
+        // 计算删除后的激活会话
         const nextActiveSessionId = computeActiveSessionAfterSessionDeletion({
           deletedSessionId: sessionId,
           prevActiveSessionId: state.activeSessionId,
@@ -127,17 +190,31 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
       })
     },
 
+    /**
+     * 重命名会话
+     *
+     * @param sessionId - 会话 ID
+     * @param title - 新标题
+     */
     renameSession: (sessionId, title) => {
       set((state) => ({
         sessions: state.sessions.map((s) => (s.id === sessionId ? { ...s, title, updatedAt: Date.now() } : s)),
       }))
     },
 
+    /**
+     * 加载会话的历史记录
+     * 从服务端获取该会话的问题和回答数据
+     * 如果会话已有内容则跳过加载
+     *
+     * @param sessionId - 会话 ID
+     */
     loadSessionHistory: async (sessionId) => {
       const { sessions } = get()
       const session = sessions.find((s) => s.id === sessionId)
       if (!session) return
 
+      // 如果已有内容，跳过加载
       const hasLoadedHistory = session.answers.length > 0 || session.question.length > 0
       if (hasLoadedHistory) return
 
@@ -152,6 +229,7 @@ export const createSessionSlice: StateCreator<ArenaState, [], [], ArenaSessionSl
           const { answers, priIdMapping } = convertHistoryToAnswers(historyData)
           const votedAnswer = answers.find((a: Answer & { liked?: boolean }) => a.liked)
 
+          // 更新会话数据
           set((state) => ({
             sessions: state.sessions.map((s) =>
               s.id === sessionId
