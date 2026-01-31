@@ -61,29 +61,24 @@ export const createTaskSlice: StateCreator<ArenaState, [], [], ArenaTaskSlice> =
   /**
    * 删除任务
    * - 级联删除该任务下的所有会话
-   * - 如果删除了所有任务，自动创建默认任务
    * - 智能计算删除后的激活状态
    *
    * @param taskId - 要删除的任务 ID
    */
   deleteTask: (taskId) => {
     set((state) => {
-      // 过滤掉要删除的任务和其下的会话
       const remainingTasks = state.tasks.filter((t) => t.id !== taskId)
       const remainingSessions = state.sessions.filter((s) => s.taskId !== taskId)
 
-      // 如果删除了所有任务，创建新的默认任务
       if (remainingTasks.length === 0) {
-        const newTask = createEmptyTask({ title: '默认任务' })
         return {
-          tasks: [newTask],
+          tasks: [],
           sessions: [],
-          activeTaskId: newTask.id,
+          activeTaskId: '',
           activeSessionId: '',
         }
       }
 
-      // 计算删除后的激活状态
       const { activeTaskId, activeSessionId } = computeActiveAfterTaskDeletion({
         deletedTaskId: taskId,
         prevActiveTaskId: state.activeTaskId,

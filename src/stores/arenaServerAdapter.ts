@@ -110,13 +110,12 @@ export function hydrateFromTaskListData(
     }
   }
 
-  // 如果服务端返回空数据，创建默认任务
+  // 如果服务端返回空数据，返回空状态（不自动创建默认任务）
   if (nextTasks.length === 0) {
-    const defaultTask = createEmptyTask({ title: '默认任务' })
     return {
-      tasks: [defaultTask],
+      tasks: [],
       sessions: [],
-      activeTaskId: defaultTask.id,
+      activeTaskId: '',
       activeSessionId: '',
     }
   }

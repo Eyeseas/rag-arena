@@ -14,6 +14,7 @@ import { useDeltaBuffer } from './useDeltaBuffer'
 
 import { getUserId } from './arenaQuestion/userId'
 import { runConversationMultiModelStream } from './arenaQuestion/conversationFlow'
+import { useArenaTaskListSync } from './useArenaTaskListSync'
 
 /**
  * 提问流程 Hook 返回值
@@ -59,6 +60,8 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
     }))
   )
 
+  const { fetchTaskList } = useArenaTaskListSync()
+
   const setAnswers = useArenaStore((s) => s.setAnswers)
   const appendAnswerDelta = useArenaStore((s) => s.appendAnswerDelta)
   const finalizeAnswer = useArenaStore((s) => s.finalizeAnswer)
@@ -68,7 +71,6 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
   const startSessionWithQuestion = useArenaStore((s) => s.startSessionWithQuestion)
   const setServerQuestionId = useArenaStore((s) => s.setServerQuestionId)
   const setSessionConversationInfo = useArenaStore((s) => s.setSessionConversationInfo)
-  const createTask = useArenaStore((s) => s.createTask)
 
   // 使用 delta 缓冲区优化性能
   const { addDelta, flush, clear } = useDeltaBuffer((buffer) => {
@@ -89,7 +91,8 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
         if (tasks.length > 0) {
           taskId = tasks[0].id
         } else {
-          taskId = createTask('默认任务')
+          message.warning('请先创建任务')
+          return
         }
       }
 
@@ -113,6 +116,7 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
           finalizeAnswer,
           setAnswerError,
         })
+        fetchTaskList({ force: true })
       } catch (error) {
         message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
         setServerQuestionId(null)
@@ -122,7 +126,6 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
     },
     [
       activeTaskId,
-      createTask,
       addDelta,
       startSessionWithQuestion,
       setLoading,
