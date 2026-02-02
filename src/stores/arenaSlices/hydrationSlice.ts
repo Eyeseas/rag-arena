@@ -50,6 +50,7 @@ export const createHydrationSlice: StateCreator<ArenaState, [], [], ArenaHydrati
       tasks: get().tasks,
       sessions: get().sessions,
       activeTaskId: get().activeTaskId,
+      activeSessionId: get().activeSessionId,
     })
     set({
       tasks,

@@ -71,6 +71,7 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
   const startSessionWithQuestion = useArenaStore((s) => s.startSessionWithQuestion)
   const setServerQuestionId = useArenaStore((s) => s.setServerQuestionId)
   const setSessionConversationInfo = useArenaStore((s) => s.setSessionConversationInfo)
+  const setActiveSessionId = useArenaStore((s) => s.setActiveSessionId)
 
   // 使用 delta 缓冲区优化性能
   const { addDelta, flush, clear } = useDeltaBuffer((buffer) => {
@@ -116,7 +117,11 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
           finalizeAnswer,
           setAnswerError,
         })
-        fetchTaskList({ force: true })
+        const currentSessionId = useArenaStore.getState().activeSessionId
+        await fetchTaskList({ force: true })
+        if (currentSessionId) {
+          setActiveSessionId(currentSessionId)
+        }
       } catch (error) {
         message.error(error instanceof Error ? error.message : '获取回答失败，请重试')
         setServerQuestionId(null)
@@ -136,6 +141,8 @@ export function useArenaQuestion(): UseArenaQuestionReturn {
       finalizeAnswer,
       setAnswerError,
       setSessionConversationInfo,
+      fetchTaskList,
+      setActiveSessionId,
     ]
   )
 

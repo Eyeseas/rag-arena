@@ -63,6 +63,7 @@ export function hydrateFromTaskListData(
     tasks: Task[]
     sessions: ArenaSession[]
     activeTaskId: string
+    activeSessionId: string
   }
 ): TaskListHydrationResult {
   // 构建 ID -> 对象的映射，用于快速查找已有数据
@@ -123,7 +124,18 @@ export function hydrateFromTaskListData(
   // 保持激活状态的连续性
   const keepActiveTask = nextTasks.some((t) => t.id === prev.activeTaskId)
   const activeTaskId = keepActiveTask ? prev.activeTaskId : ''
-  const activeSessionId = activeTaskId ? (nextSessions.find((s) => s.taskId === activeTaskId)?.id || '') : ''
+  
+  let keepActiveSession = !!(activeTaskId && nextSessions.some((s) => s.id === prev.activeSessionId && s.taskId === activeTaskId))
+  
+  if (activeTaskId && !keepActiveSession && prev.activeSessionId) {
+    const localActiveSession = prevSessionById.get(prev.activeSessionId)
+    if (localActiveSession && localActiveSession.taskId === activeTaskId) {
+      nextSessions.push(localActiveSession)
+      keepActiveSession = true
+    }
+  }
+  
+  const activeSessionId = keepActiveSession ? prev.activeSessionId : ''
 
   return {
     tasks: nextTasks,
