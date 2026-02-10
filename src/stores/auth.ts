@@ -10,6 +10,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '@/types/auth'
 
+const AUTH_STORE_KEY = 'auth-store'
+
 /**
  * 认证状态接口定义
  */
@@ -73,6 +75,18 @@ export const useAuthStore = create<AuthState>()(
        */
       clearAuth: () => {
         set({ user: null, tssotoken: null, isAuthenticated: false })
+
+        // `persist` will write the cleared state back to storage. If the intent is
+        // to fully remove the cached auth data (e.g. logout / token invalidation),
+        // delete the persisted entry as well.
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(AUTH_STORE_KEY)
+          }
+        } catch (error) {
+          // Storage can be unavailable (privacy mode / blocked / non-browser env).
+          console.warn('[auth-store] Failed to remove persisted auth store', error)
+        }
       },
 
       /**
@@ -84,7 +98,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       /** localStorage 存储键名 */
-      name: 'auth-store',
+      name: AUTH_STORE_KEY,
       /**
        * 选择性持久化
        * 只持久化必要的认证状态，不持久化方法

@@ -7,7 +7,7 @@ type AuthStatus = 'checking' | 'authenticated' | 'redirecting'
 const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED !== 'false'
 
 export function useAuth() {
-  const { user, isAuthenticated, setAuth, tssotoken } = useAuthStore()
+  const { user, isAuthenticated, setAuth, clearAuth, tssotoken } = useAuthStore()
   const [status, setStatus] = useState<AuthStatus>(AUTH_ENABLED ? 'checking' : 'authenticated')
   const hasChecked = useRef(false)
 
@@ -42,6 +42,7 @@ export function useAuth() {
             console.log('[useAuth] Login success with URL token, user info updated')
           } else {
             console.log('[useAuth] Login failed, redirecting to:', response.redirectUrl)
+            clearAuth()
             setStatus('redirecting')
             window.location.href = response.redirectUrl
           }
@@ -86,6 +87,7 @@ export function useAuth() {
           console.log('[useAuth] Login success, authenticated')
         } else {
           console.log('[useAuth] Login failed, redirecting to:', response.redirectUrl)
+          clearAuth()
           setStatus('redirecting')
           window.location.href = response.redirectUrl
         }
@@ -96,7 +98,7 @@ export function useAuth() {
     }
 
     checkAuth()
-  }, [isAuthenticated, tssotoken, setAuth])
+  }, [isAuthenticated, tssotoken, setAuth, clearAuth])
 
   return {
     user,
