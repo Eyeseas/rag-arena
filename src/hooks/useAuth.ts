@@ -22,6 +22,8 @@ export function useAuth() {
 
     if (tokenFromUrl) {
       console.log('[useAuth] URL token found, forcing re-authentication')
+      // Avoid a second auth-check after setAuth triggers a re-render.
+      hasChecked.current = true
 
       const url = new URL(window.location.href)
       url.searchParams.delete('tssotoken')
@@ -68,17 +70,10 @@ export function useAuth() {
         hasChecked: hasChecked.current,
       })
 
+      hasChecked.current = true
+
       const tokenToUse = tssotoken || undefined
       console.log('[useAuth] tokenToUse:', tokenToUse)
-
-      if (isAuthenticated) {
-        console.log('[useAuth] Already authenticated, skipping login')
-        setStatus('authenticated')
-        hasChecked.current = true
-        return
-      }
-
-      hasChecked.current = true
 
       try {
         console.log('[useAuth] Calling login API...')
