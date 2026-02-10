@@ -17,6 +17,42 @@ export function useAuth() {
       return
     }
 
+    const urlParams = new URLSearchParams(window.location.search)
+    const tokenFromUrl = urlParams.get('tssotoken')
+
+    if (tokenFromUrl) {
+      console.log('[useAuth] URL token found, forcing re-authentication')
+
+      const url = new URL(window.location.href)
+      url.searchParams.delete('tssotoken')
+      window.history.replaceState({}, '', url.toString())
+      console.log('[useAuth] Removed token from URL')
+
+      const authenticateWithUrlToken = async () => {
+        try {
+          console.log('[useAuth] Calling login API with URL token...')
+          const response = await login(tokenFromUrl)
+          console.log('[useAuth] Login response:', response)
+
+          if (response.success) {
+            setAuth(response.user, tokenFromUrl)
+            setStatus('authenticated')
+            console.log('[useAuth] Login success with URL token, user info updated')
+          } else {
+            console.log('[useAuth] Login failed, redirecting to:', response.redirectUrl)
+            setStatus('redirecting')
+            window.location.href = response.redirectUrl
+          }
+        } catch (error) {
+          console.error('[useAuth] Login error:', error)
+          setStatus('redirecting')
+        }
+      }
+
+      authenticateWithUrlToken()
+      return
+    }
+
     if (hasChecked.current) {
       console.log('[useAuth] Already checked, skipping')
       if (isAuthenticated) {
@@ -26,27 +62,16 @@ export function useAuth() {
     }
 
     const checkAuth = async () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const tokenFromUrl = urlParams.get('tssotoken')
-
       console.log('[useAuth] checkAuth called', {
-        tokenFromUrl,
         tssotoken,
         isAuthenticated,
         hasChecked: hasChecked.current,
       })
 
-      if (tokenFromUrl) {
-        const url = new URL(window.location.href)
-        url.searchParams.delete('tssotoken')
-        window.history.replaceState({}, '', url.toString())
-        console.log('[useAuth] Removed token from URL')
-      }
-
-      const tokenToUse = tokenFromUrl || tssotoken || undefined
+      const tokenToUse = tssotoken || undefined
       console.log('[useAuth] tokenToUse:', tokenToUse)
 
-      if (isAuthenticated && !tokenFromUrl) {
+      if (isAuthenticated) {
         console.log('[useAuth] Already authenticated, skipping login')
         setStatus('authenticated')
         hasChecked.current = true
